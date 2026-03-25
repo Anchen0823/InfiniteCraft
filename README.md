@@ -45,8 +45,11 @@ pnpm preview
 src/
 ├── components/        # UI 组件
 │   ├── ElementCard.tsx    # 元素卡片
-│   └── Sidebar.tsx        # 左侧元素库面板
+│   ├── Sidebar.tsx        # 左侧元素库面板
+│   ├── Workspace.tsx      # 工作台无限画布
+│   └── ContextMenu.tsx    # 右键上下文菜单
 ├── hooks/             # 自定义 Hooks
+│   └── useCanvas.ts       # 画布缩放与平移
 ├── services/          # 服务层 (AI API 调用)
 ├── store/             # Zustand 状态管理
 │   ├── elementStore.ts    # 元素库状态
@@ -65,7 +68,7 @@ src/
 - [x] Phase 0 — 项目初始化
 - [x] Phase 1 — 数据层 (类型定义、Zustand Store、localStorage 持久化)
 - [x] Phase 2 — 元素卡片与侧边栏 (搜索、分类筛选、排序)
-- [ ] Phase 3 — 工作台画布
+- [x] Phase 3 — 工作台画布 (无限画布、缩放平移、元素拖拽、右键菜单)
 - [ ] Phase 4 — 拖拽合成系统
 - [ ] Phase 5 — AI 合成服务
 - [ ] Phase 6 — 合成逻辑与动画

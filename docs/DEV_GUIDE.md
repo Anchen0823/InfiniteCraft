@@ -79,22 +79,22 @@ infinite-craft/
 
 ### 任务清单
 
-- [ ] 使用 Vite 创建 React + TypeScript 项目
+- [x] 使用 Vite 创建 React + TypeScript 项目
   ```bash
   pnpm create vite infinite-craft --template react-ts
   ```
-- [ ] 安装核心依赖
+- [x] 安装核心依赖
   ```bash
   pnpm add zustand framer-motion
   ```
-- [ ] 安装 Tailwind CSS
+- [x] 安装 Tailwind CSS
   ```bash
   pnpm add -D tailwindcss @tailwindcss/vite
   ```
-- [ ] 配置 Tailwind（`index.css` 中引入 `@import "tailwindcss"`）
-- [ ] 清理 Vite 模板默认代码（App.tsx、index.css）
-- [ ] 搭建基础目录结构（`components/`、`hooks/`、`services/`、`store/`、`types/`、`utils/`）
-- [ ] 确认 `pnpm dev` 可正常启动空白页面
+- [x] 配置 Tailwind（`index.css` 中引入 `@import "tailwindcss"`）
+- [x] 清理 Vite 模板默认代码（App.tsx、index.css）
+- [x] 搭建基础目录结构（`components/`、`hooks/`、`services/`、`store/`、`types/`、`utils/`）
+- [x] 确认 `pnpm dev` 可正常启动空白页面
 
 ### 验收标准
 
@@ -108,7 +108,7 @@ infinite-craft/
 
 ### 任务清单
 
-- [ ] **定义类型** `src/types/index.ts`
+- [x] **定义类型** `src/types/index.ts`
   ```typescript
   interface Element {
     id: string;
@@ -141,29 +141,29 @@ infinite-craft/
   }
   ```
 
-- [ ] **常量定义** `src/utils/constants.ts`
+- [x] **常量定义** `src/utils/constants.ts`
   - 五行基础元素数据（id、name、emoji、categories）
   - 预设类别池数组
   - 默认 AI 配置模板
 
-- [ ] **元素库 Store** `src/store/elementStore.ts`
+- [x] **元素库 Store** `src/store/elementStore.ts`
   - 状态：`elements: Map<string, Element>`（已发现元素）
   - 操作：`addElement()`、`getElement()`、`getAllElements()`、`searchElements(query)`
   - 初始化时预置五行基础元素
   - 启用 Zustand `persist` 中间件，存储到 localStorage
 
-- [ ] **配方 Store** `src/store/recipeStore.ts`
+- [x] **配方 Store** `src/store/recipeStore.ts`
   - 状态：`recipes: Recipe[]`
   - 操作：`addRecipe()`、`findRecipe(nameA, nameB)`、`getRecipesForElement(elementId)`
   - 查找时将两个元素名排序后匹配（A+B = B+A）
   - 启用 persist 中间件
 
-- [ ] **工作台 Store** `src/store/workspaceStore.ts`
+- [x] **工作台 Store** `src/store/workspaceStore.ts`
   - 状态：`items: WorkspaceElement[]`、`scale: number`、`panX/panY: number`
   - 操作：`addItem()`、`removeItem()`、`moveItem()`、`clearAll()`
   - 启用 persist 中间件
 
-- [ ] **设置 Store** `src/store/settingsStore.ts`
+- [x] **设置 Store** `src/store/settingsStore.ts`
   - 状态：`aiConfig: AIConfig`、`craftCount: number`
   - 操作：`updateConfig()`、`incrementCraftCount()`
   - 启用 persist 中间件
@@ -215,7 +215,7 @@ const useElementStore = create(
 
 ### 任务清单
 
-- [ ] **ElementCard 组件** `src/components/ElementCard.tsx`
+- [x] **ElementCard 组件** `src/components/ElementCard.tsx`
   - 展示 Emoji + 名称
   - 样式：圆角卡片、hover 阴影、cursor grab
   - 支持 `isNew` 属性，显示"✨"标记
@@ -228,7 +228,7 @@ const useElementStore = create(
     </div>
     ```
 
-- [ ] **Sidebar 组件** `src/components/Sidebar.tsx`
+- [x] **Sidebar 组件** `src/components/Sidebar.tsx`
   - 顶部：搜索输入框
   - 中部：元素列表（网格或列表布局）
   - 底部：已发现元素计数
@@ -236,7 +236,7 @@ const useElementStore = create(
   - 支持按发现时间 / 名称排序切换
   - 面板可折叠（收起/展开按钮）
 
-- [ ] **搜索与筛选逻辑**
+- [x] **搜索与筛选逻辑**
   - 按名称模糊搜索
   - 按类别标签筛选（点击类别标签切换过滤）
   - 筛选结果实时更新
@@ -263,29 +263,29 @@ src/store/elementStore.ts        — 可能新增搜索相关 selector
 
 ### 任务清单
 
-- [ ] **Workspace 组件** `src/components/Workspace.tsx`
+- [x] **Workspace 组件** `src/components/Workspace.tsx`
   - 占据主区域，背景使用点阵/网格图案（便于感知缩放平移）
   - 渲染 workspaceStore 中的所有 `WorkspaceElement`
   - 每个工作台元素使用 `absolute` 定位，通过 `transform: translate(x, y)` 放置
 
-- [ ] **画布缩放与平移** `src/hooks/useCanvas.ts`
+- [x] **画布缩放与平移** `src/hooks/useCanvas.ts`
   - 鼠标滚轮 → 缩放（以鼠标位置为中心）
   - 中键拖拽 / 空格+左键拖拽 → 平移
   - 缩放范围限制（0.25x ~ 2x）
   - 将 scale / panX / panY 同步到 workspaceStore
 
-- [ ] **元素自由拖拽** `src/hooks/useDragElement.ts`
+- [x] **元素自由拖拽**（集成在 Workspace.tsx 中，基于 Pointer Events）
   - 基于 Pointer Events（`pointerdown` / `pointermove` / `pointerup`）
   - 拖拽时更新元素的 x, y 坐标
   - 需将屏幕坐标转换为画布坐标（考虑 scale + pan 偏移）
   - 拖拽过程中元素 z-index 提升到最顶层
 
-- [ ] **工作台元素删除**
+- [x] **工作台元素删除**
   - 右键点击 → 显示上下文菜单（ContextMenu 组件）→ 删除
   - `Delete` / `Backspace` 键删除选中元素
   - 双击空白区域 → 弹出确认后清空全部
 
-- [ ] **ContextMenu 组件** `src/components/ContextMenu.tsx`
+- [x] **ContextMenu 组件** `src/components/ContextMenu.tsx`
   - 位置跟随鼠标
   - 菜单项：删除、查看详情
   - 点击外部自动关闭
