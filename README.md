@@ -69,7 +69,7 @@ src/
 - [x] Phase 1 — 数据层 (类型定义、Zustand Store、localStorage 持久化)
 - [x] Phase 2 — 元素卡片与侧边栏 (搜索、分类筛选、排序)
 - [x] Phase 3 — 工作台画布 (无限画布、缩放平移、元素拖拽、右键菜单)
-- [ ] Phase 4 — 拖拽合成系统
+- [x] Phase 4 — 拖拽合成系统 (侧边栏拖出、碰撞检测、mock合成)
 - [ ] Phase 5 — AI 合成服务
 - [ ] Phase 6 — 合成逻辑与动画
 - [ ] Phase 7 — 图鉴与配方表

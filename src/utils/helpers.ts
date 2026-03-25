@@ -17,3 +17,11 @@ export function screenToCanvas(
     y: (screenY - pan.y) / scale,
   }
 }
+
+export function checkOverlap(rectA: DOMRect, rectB: DOMRect): boolean {
+  const overlapX = Math.max(0, Math.min(rectA.right, rectB.right) - Math.max(rectA.left, rectB.left))
+  const overlapY = Math.max(0, Math.min(rectA.bottom, rectB.bottom) - Math.max(rectA.top, rectB.top))
+  const overlapArea = overlapX * overlapY
+  const minArea = Math.min(rectA.width * rectA.height, rectB.width * rectB.height)
+  return overlapArea > minArea * 0.3
+}

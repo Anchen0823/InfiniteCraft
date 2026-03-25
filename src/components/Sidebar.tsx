@@ -1,16 +1,28 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useElementStore } from '../store/elementStore'
 import ElementCard from './ElementCard'
+import DragOverlay from './DragOverlay'
 
 type SortMode = 'time' | 'name'
 
-export default function Sidebar() {
+interface SidebarDrag {
+  elementId: string
+  emoji: string
+  name: string
+}
+
+interface SidebarProps {
+  onDropToWorkspace?: (elementId: string, screenX: number, screenY: number) => void
+}
+
+export default function Sidebar({ onDropToWorkspace }: SidebarProps) {
   const allElements = useElementStore(s => s.getAllElements)()
   const [collapsed, setCollapsed] = useState(false)
   const [search, setSearch] = useState('')
   const [sortMode, setSortMode] = useState<SortMode>('time')
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [sidebarDrag, setSidebarDrag] = useState<SidebarDrag | null>(null)
 
   const allCategories = useMemo(() => {
     const cats = new Set<string>()
@@ -42,6 +54,24 @@ export default function Sidebar() {
     return result
   }, [allElements, search, activeCategory, sortMode])
 
+  const handleSidebarPointerDown = useCallback(
+    (e: React.PointerEvent, el: { id: string; emoji: string; name: string }) => {
+      if (e.button !== 0) return
+      e.preventDefault()
+
+      setSidebarDrag({ elementId: el.id, emoji: el.emoji, name: el.name })
+
+      const onUp = (ue: PointerEvent) => {
+        setSidebarDrag(null)
+        onDropToWorkspace?.(el.id, ue.clientX, ue.clientY)
+        window.removeEventListener('pointerup', onUp)
+      }
+
+      window.addEventListener('pointerup', onUp)
+    },
+    [onDropToWorkspace],
+  )
+
   if (collapsed) {
     return (
       <div className="w-10 bg-white border-r border-gray-200 flex flex-col items-center pt-4">
@@ -57,98 +87,110 @@ export default function Sidebar() {
   }
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-        <h2 className="text-sm font-bold text-gray-700">元素库</h2>
-        <button
-          onClick={() => setCollapsed(true)}
-          className="p-1 rounded hover:bg-gray-100 text-gray-400 transition-colors"
-          title="收起"
-        >
-          <ChevronLeft />
-        </button>
-      </div>
-
-      {/* Search */}
-      <div className="px-3 py-2">
-        <input
-          type="text"
-          placeholder="搜索元素..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="w-full px-3 py-1.5 text-sm rounded-lg border border-gray-200
-                     bg-gray-50 focus:bg-white focus:border-blue-400 focus:outline-none
-                     transition-colors placeholder:text-gray-400"
-        />
-      </div>
-
-      {/* Sort toggle */}
-      <div className="px-3 pb-1 flex gap-1">
-        <SortButton active={sortMode === 'time'} onClick={() => setSortMode('time')}>
-          按时间
-        </SortButton>
-        <SortButton active={sortMode === 'name'} onClick={() => setSortMode('name')}>
-          按名称
-        </SortButton>
-      </div>
-
-      {/* Category filter */}
-      <div className="px-3 py-1.5 flex flex-wrap gap-1">
-        <CategoryTag
-          active={activeCategory === null}
-          onClick={() => setActiveCategory(null)}
-        >
-          全部
-        </CategoryTag>
-        {allCategories.map(cat => (
-          <CategoryTag
-            key={cat}
-            active={activeCategory === cat}
-            onClick={() =>
-              setActiveCategory(prev => (prev === cat ? null : cat))
-            }
+    <>
+      <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+          <h2 className="text-sm font-bold text-gray-700">元素库</h2>
+          <button
+            onClick={() => setCollapsed(true)}
+            className="p-1 rounded hover:bg-gray-100 text-gray-400 transition-colors"
+            title="收起"
           >
-            {cat}
+            <ChevronLeft />
+          </button>
+        </div>
+
+        {/* Search */}
+        <div className="px-3 py-2">
+          <input
+            type="text"
+            placeholder="搜索元素..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full px-3 py-1.5 text-sm rounded-lg border border-gray-200
+                       bg-gray-50 focus:bg-white focus:border-blue-400 focus:outline-none
+                       transition-colors placeholder:text-gray-400"
+          />
+        </div>
+
+        {/* Sort toggle */}
+        <div className="px-3 pb-1 flex gap-1">
+          <SortButton active={sortMode === 'time'} onClick={() => setSortMode('time')}>
+            按时间
+          </SortButton>
+          <SortButton active={sortMode === 'name'} onClick={() => setSortMode('name')}>
+            按名称
+          </SortButton>
+        </div>
+
+        {/* Category filter */}
+        <div className="px-3 py-1.5 flex flex-wrap gap-1">
+          <CategoryTag
+            active={activeCategory === null}
+            onClick={() => setActiveCategory(null)}
+          >
+            全部
           </CategoryTag>
-        ))}
-      </div>
+          {allCategories.map(cat => (
+            <CategoryTag
+              key={cat}
+              active={activeCategory === cat}
+              onClick={() =>
+                setActiveCategory(prev => (prev === cat ? null : cat))
+              }
+            >
+              {cat}
+            </CategoryTag>
+          ))}
+        </div>
 
-      {/* Element list */}
-      <div className="flex-1 overflow-y-auto px-3 py-2">
-        <div className="flex flex-col gap-1.5">
-          <AnimatePresence mode="popLayout">
-            {filteredElements.map(el => (
-              <motion.div
-                key={el.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.15 }}
-              >
-                <ElementCard
-                  emoji={el.emoji}
-                  name={el.name}
-                  size="sm"
-                  isNew={!el.isBase && Date.now() - el.discoveredAt < 10000}
-                />
-              </motion.div>
-            ))}
-          </AnimatePresence>
+        {/* Element list */}
+        <div className="flex-1 overflow-y-auto px-3 py-2">
+          <div className="flex flex-col gap-1.5">
+            <AnimatePresence mode="popLayout">
+              {filteredElements.map(el => (
+                <motion.div
+                  key={el.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <ElementCard
+                    emoji={el.emoji}
+                    name={el.name}
+                    size="sm"
+                    isNew={!el.isBase && Date.now() - el.discoveredAt < 10000}
+                    onPointerDown={e => handleSidebarPointerDown(e, el)}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
 
-          {filteredElements.length === 0 && (
-            <p className="text-center text-sm text-gray-400 py-6">
-              没有找到匹配的元素
-            </p>
-          )}
+            {filteredElements.length === 0 && (
+              <p className="text-center text-sm text-gray-400 py-6">
+                没有找到匹配的元素
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-4 py-2.5 border-t border-gray-100 text-xs text-gray-500 text-center">
+          已发现 <span className="font-bold text-gray-700">{allElements.length}</span> 种元素
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="px-4 py-2.5 border-t border-gray-100 text-xs text-gray-500 text-center">
-        已发现 <span className="font-bold text-gray-700">{allElements.length}</span> 种元素
-      </div>
-    </div>
+      {/* Drag overlay for sidebar → workspace drag */}
+      {sidebarDrag && (
+        <DragOverlay
+          emoji={sidebarDrag.emoji}
+          name={sidebarDrag.name}
+          active={!!sidebarDrag}
+        />
+      )}
+    </>
   )
 }
 

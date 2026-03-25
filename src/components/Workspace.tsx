@@ -1,8 +1,9 @@
-import { useRef, useCallback, useState } from 'react'
+import { useRef, useCallback, useState, useImperativeHandle, forwardRef } from 'react'
 import { useWorkspaceStore } from '../store/workspaceStore'
 import { useElementStore } from '../store/elementStore'
 import { useCanvas } from '../hooks/useCanvas'
-import { screenToCanvas } from '../utils/helpers'
+import { useCraft } from '../hooks/useCraft'
+import { screenToCanvas, generateId, checkOverlap } from '../utils/helpers'
 import ElementCard from './ElementCard'
 import ContextMenu, { type ContextMenuItem } from './ContextMenu'
 
@@ -12,67 +13,130 @@ interface DragState {
   offsetY: number
 }
 
-export default function Workspace() {
+export interface WorkspaceHandle {
+  handleDropFromSidebar: (elementId: string, screenX: number, screenY: number) => void
+}
+
+const Workspace = forwardRef<WorkspaceHandle>(function Workspace(_, ref) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const canvasLayerRef = useRef<HTMLDivElement>(null)
   const { scale, panX, panY } = useCanvas(containerRef)
-  const { items, moveItem, removeItem, clearAll } = useWorkspaceStore()
+  const { items, moveItem, removeItem, clearAll, addItem } = useWorkspaceStore()
   const getElement = useElementStore(s => s.getElement)
+  const { craft, crafting, craftingIds } = useCraft()
 
   const [dragging, setDragging] = useState<DragState | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [overlapTargetId, setOverlapTargetId] = useState<string | null>(null)
   const [contextMenu, setContextMenu] = useState<{
     x: number; y: number; instanceId: string
   } | null>(null)
 
+  const findOverlapTarget = useCallback(
+    (draggedId: string) => {
+      const canvasLayer = canvasLayerRef.current
+      if (!canvasLayer) return null
+
+      const draggedEl = canvasLayer.querySelector(`[data-instance-id="${draggedId}"]`)
+      if (!draggedEl) return null
+      const draggedRect = draggedEl.getBoundingClientRect()
+
+      for (const item of items) {
+        if (item.instanceId === draggedId) continue
+        if (craftingIds?.includes(item.instanceId)) continue
+
+        const el = canvasLayer.querySelector(`[data-instance-id="${item.instanceId}"]`)
+        if (!el) continue
+
+        if (checkOverlap(draggedRect, el.getBoundingClientRect())) {
+          return item.instanceId
+        }
+      }
+      return null
+    },
+    [items, craftingIds],
+  )
+
   const handleElementPointerDown = useCallback(
     (e: React.PointerEvent, instanceId: string) => {
-      if (e.button !== 0) return
+      if (e.button !== 0 || crafting) return
       e.stopPropagation()
       e.preventDefault()
 
       const item = items.find(i => i.instanceId === instanceId)
       if (!item) return
+      if (craftingIds?.includes(instanceId)) return
 
       setSelectedId(instanceId)
       setContextMenu(null)
 
       const canvasX = item.x * scale + panX
       const canvasY = item.y * scale + panY
+      const offsetX = e.clientX - canvasX
+      const offsetY = e.clientY - canvasY
 
-      setDragging({
-        instanceId,
-        offsetX: e.clientX - canvasX,
-        offsetY: e.clientY - canvasY,
-      })
+      setDragging({ instanceId, offsetX, offsetY })
 
-      const container = containerRef.current
-      if (container) {
-        const onMove = (me: PointerEvent) => {
-          const newCanvas = screenToCanvas(
-            me.clientX - (e.clientX - canvasX - panX + panX),
-            me.clientY - (e.clientY - canvasY - panY + panY),
-            { x: 0, y: 0 },
-            1,
-          )
-          void newCanvas
+      const onMove = (me: PointerEvent) => {
+        const cx = (me.clientX - offsetX - panX) / scale
+        const cy = (me.clientY - offsetY - panY) / scale
+        moveItem(instanceId, cx, cy)
 
-          const cx = (me.clientX - (e.clientX - canvasX) - panX) / scale
-          const cy = (me.clientY - (e.clientY - canvasY) - panY) / scale
-          moveItem(instanceId, cx, cy)
-        }
-
-        const onUp = () => {
-          setDragging(null)
-          window.removeEventListener('pointermove', onMove)
-          window.removeEventListener('pointerup', onUp)
-        }
-
-        window.addEventListener('pointermove', onMove)
-        window.addEventListener('pointerup', onUp)
+        requestAnimationFrame(() => {
+          const target = findOverlapTarget(instanceId)
+          setOverlapTargetId(target)
+        })
       }
+
+      const onUp = () => {
+        const target = findOverlapTarget(instanceId)
+        setDragging(null)
+        setOverlapTargetId(null)
+
+        if (target) {
+          const targetItem = useWorkspaceStore.getState().items.find(i => i.instanceId === target)
+          const dragItem = useWorkspaceStore.getState().items.find(i => i.instanceId === instanceId)
+          if (targetItem && dragItem) {
+            craft(dragItem, targetItem)
+          }
+        }
+
+        window.removeEventListener('pointermove', onMove)
+        window.removeEventListener('pointerup', onUp)
+      }
+
+      window.addEventListener('pointermove', onMove)
+      window.addEventListener('pointerup', onUp)
     },
-    [items, scale, panX, panY, moveItem],
+    [items, scale, panX, panY, moveItem, crafting, craftingIds, findOverlapTarget, craft],
   )
+
+  useImperativeHandle(ref, () => ({
+    handleDropFromSidebar(elementId: string, screenX: number, screenY: number) {
+      const container = containerRef.current
+      if (!container) return
+
+      const rect = container.getBoundingClientRect()
+      if (
+        screenX < rect.left || screenX > rect.right ||
+        screenY < rect.top || screenY > rect.bottom
+      ) return
+
+      const pos = screenToCanvas(
+        screenX - rect.left,
+        screenY - rect.top,
+        { x: panX, y: panY },
+        scale,
+      )
+
+      addItem({
+        instanceId: generateId(),
+        elementId,
+        x: pos.x - 40,
+        y: pos.y - 16,
+      })
+    },
+  }), [panX, panY, scale, addItem])
 
   const handleContextMenu = useCallback(
     (e: React.MouseEvent, instanceId: string) => {
@@ -152,8 +216,16 @@ export default function Workspace() {
         </div>
       )}
 
+      {/* Crafting indicator */}
+      {crafting && (
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-amber-100 text-amber-700 rounded-full text-xs font-medium shadow-sm pointer-events-none animate-pulse">
+          合成中...
+        </div>
+      )}
+
       {/* Canvas layer */}
       <div
+        ref={canvasLayerRef}
         style={{
           transform: `translate(${panX}px, ${panY}px) scale(${scale})`,
           transformOrigin: '0 0',
@@ -168,15 +240,20 @@ export default function Workspace() {
 
           const isSelected = selectedId === item.instanceId
           const isDragging = dragging?.instanceId === item.instanceId
+          const isOverlapTarget = overlapTargetId === item.instanceId
+          const isCrafting = craftingIds?.includes(item.instanceId) ?? false
 
           return (
             <div
               key={item.instanceId}
+              data-instance-id={item.instanceId}
               className="absolute"
               style={{
                 transform: `translate(${item.x}px, ${item.y}px)`,
                 zIndex: isDragging ? 999 : isSelected ? 100 : 1,
-                transition: isDragging ? 'none' : undefined,
+                transition: isDragging ? 'none' : 'transform 0.1s ease',
+                opacity: isCrafting ? 0.5 : 1,
+                pointerEvents: isCrafting ? 'none' : 'auto',
               }}
               onPointerDown={e => handleElementPointerDown(e, item.instanceId)}
               onContextMenu={e => handleContextMenu(e, item.instanceId)}
@@ -185,10 +262,10 @@ export default function Workspace() {
                 emoji={element.emoji}
                 name={element.name}
                 className={`${
-                  isSelected
-                    ? 'ring-2 ring-blue-400 shadow-lg'
-                    : ''
-                } ${isDragging ? 'opacity-80 shadow-xl' : ''}`}
+                  isSelected ? 'ring-2 ring-blue-400 shadow-lg' : ''
+                } ${isDragging ? 'opacity-80 shadow-xl' : ''} ${
+                  isOverlapTarget ? 'ring-2 ring-amber-400 shadow-lg shadow-amber-200' : ''
+                }`}
               />
             </div>
           )
@@ -207,4 +284,6 @@ export default function Workspace() {
       )}
     </div>
   )
-}
+})
+
+export default Workspace
