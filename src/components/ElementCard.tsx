@@ -37,7 +37,6 @@ export default function ElementCard({
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.97 }}
       onPointerDown={onPointerDown}
-      layout
     >
       <span className={emojiSize}>{emoji}</span>
       <span className="font-medium text-gray-700 whitespace-nowrap">{name}</span>

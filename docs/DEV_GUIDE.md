@@ -393,7 +393,7 @@ src/utils/helpers.ts             — 新增碰撞检测函数
 
 ### 任务清单
 
-- [ ] **AI 服务封装** `src/services/ai.ts`
+- [x] **AI 服务封装** `src/services/ai.ts`
   ```typescript
   interface CraftResult {
     name: string;
@@ -415,25 +415,25 @@ src/utils/helpers.ts             — 新增碰撞检测函数
   }
   ```
 
-- [ ] **Prompt 构造**
+- [x] **Prompt 构造**
   - 使用 PRD 3.1 节定义的系统提示词
   - 将已有类别池注入 Prompt，引导 AI 优先复用
   - 使用 `response_format: { type: "json_object" }` 确保 JSON 输出（如模型支持）
 
-- [ ] **API 调用实现**
+- [x] **API 调用实现**
   - 使用 `fetch` 调用 `POST {baseUrl}/v1/chat/completions`
   - 请求头：`Authorization: Bearer {apiKey}`、`Content-Type: application/json`
   - 请求体：标准 OpenAI Chat Completions 格式
   - 超时处理：`AbortController` + 10 秒超时
   - 重试机制：失败后最多重试 3 次，间隔递增（1s, 2s, 4s）
 
-- [ ] **响应解析与校验**
+- [x] **响应解析与校验**
   - 从 `choices[0].message.content` 提取 JSON
   - 正则兜底：如果返回文本包裹在 markdown 代码块中，提取其中的 JSON
   - 校验 `name`（非空字符串）、`emoji`（单个 emoji）、`categories`（非空数组）
   - 校验失败时重试
 
-- [ ] **设置界面** `src/components/SettingsModal.tsx`
+- [ ] **设置界面** `src/components/SettingsModal.tsx` *(Phase 9 打磨阶段实现)*
   - 表单字段：API Base URL、API Key（密码输入框）、模型名称
   - 预设几组常见配置（下拉选择）：
     - DeepSeek: `https://api.deepseek.com` / `deepseek-chat`
@@ -443,7 +443,7 @@ src/utils/helpers.ts             — 新增碰撞检测函数
   - "测试连接" 按钮：发送一个简单请求验证配置是否有效
   - 保存到 settingsStore（persist 到 localStorage）
 
-- [ ] **设置 Store** `src/store/settingsStore.ts`
+- [x] **设置 Store** `src/store/settingsStore.ts`
   - 完善 AIConfig 的默认值和更新逻辑
 
 ### 关键技术要点

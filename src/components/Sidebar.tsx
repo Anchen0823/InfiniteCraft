@@ -10,6 +10,8 @@ interface SidebarDrag {
   elementId: string
   emoji: string
   name: string
+  startX: number
+  startY: number
 }
 
 interface SidebarProps {
@@ -17,7 +19,8 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ onDropToWorkspace }: SidebarProps) {
-  const allElements = useElementStore(s => s.getAllElements)()
+  const elements = useElementStore(s => s.elements)
+  const allElements = useMemo(() => Object.values(elements), [elements])
   const [collapsed, setCollapsed] = useState(false)
   const [search, setSearch] = useState('')
   const [sortMode, setSortMode] = useState<SortMode>('time')
@@ -59,7 +62,7 @@ export default function Sidebar({ onDropToWorkspace }: SidebarProps) {
       if (e.button !== 0) return
       e.preventDefault()
 
-      setSidebarDrag({ elementId: el.id, emoji: el.emoji, name: el.name })
+      setSidebarDrag({ elementId: el.id, emoji: el.emoji, name: el.name, startX: e.clientX, startY: e.clientY })
 
       const onUp = (ue: PointerEvent) => {
         setSidebarDrag(null)
@@ -188,6 +191,8 @@ export default function Sidebar({ onDropToWorkspace }: SidebarProps) {
           emoji={sidebarDrag.emoji}
           name={sidebarDrag.name}
           active={!!sidebarDrag}
+          initialX={sidebarDrag.startX}
+          initialY={sidebarDrag.startY}
         />
       )}
     </>
