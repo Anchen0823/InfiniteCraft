@@ -1,24 +1,22 @@
-import { useElementStore } from './store/elementStore'
-import { useSettingsStore } from './store/settingsStore'
+import Sidebar from './components/Sidebar'
 
 function App() {
-  const elements = useElementStore(s => s.getAllElements)()
-  const craftCount = useSettingsStore(s => s.craftCount)
-
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-6 p-8">
-      <h1 className="text-3xl font-bold text-gray-800">🧪 无尽炼金</h1>
-      <p className="text-gray-500">已发现 {elements.length} 种元素 | 合成次数: {craftCount}</p>
-      <div className="flex gap-3 flex-wrap justify-center">
-        {elements.map(el => (
-          <div
-            key={el.id}
-            className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl shadow-sm border border-gray-200"
-          >
-            <span className="text-xl">{el.emoji}</span>
-            <span className="text-sm font-medium text-gray-700">{el.name}</span>
-          </div>
-        ))}
+    <div className="h-screen flex bg-gray-50">
+      {/* Sidebar */}
+      <Sidebar />
+
+      {/* Main area placeholder */}
+      <div className="flex-1 flex flex-col">
+        {/* Toolbar placeholder */}
+        <div className="h-12 bg-white border-b border-gray-200 flex items-center px-4 gap-3">
+          <span className="text-lg font-bold text-gray-800">🧪 无尽炼金</span>
+        </div>
+
+        {/* Workspace placeholder */}
+        <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">
+          工作台（Phase 3 实现）
+        </div>
       </div>
     </div>
   )
