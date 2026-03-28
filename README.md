@@ -1,80 +1,128 @@
-# 🧪 无尽炼金 (Infinite Craft)
+# 无尽炼金
 
-一款基于 AI 驱动的元素合成 Web 应用。从"金、木、水、火、土"五种基础元素出发，通过拖拽将两种元素组合，由 AI 实时生成合成结果，构建出一棵庞大的合成树。
+一款 AI 驱动的元素合成 Web 应用。从“金、木、水、火、土”五种基础元素出发，通过拖拽把两种元素组合在一起，由模型生成新的结果元素，并把进度保存到服务器数据库中。
 
-## 核心玩法
-
-```
-选择元素 → 拖拽合成 → AI 返回新元素 → 元素入库 → 继续合成
-```
+当前项目已经从“纯前端 + localStorage”迁移为“React 前端 + Node.js 服务端 + SQLite”的单用户部署方案，适合你把它放到自己的服务器上长期游玩。
 
 ## 技术栈
 
-| 类别     | 选型                       |
-| -------- | -------------------------- |
-| 框架     | React 18 + TypeScript      |
-| 构建工具 | Vite 5                     |
-| 样式     | Tailwind CSS 4             |
-| 状态管理 | Zustand (persist 持久化)   |
-| 动画     | Framer Motion              |
-| AI 调用  | OpenAI 兼容格式 API (fetch)|
-| 数据持久化 | localStorage            |
-| 包管理   | pnpm                       |
+| 类别 | 选型 |
+| --- | --- |
+| 前端 | React 18 + TypeScript |
+| 构建 | Vite 6 |
+| 样式 | Tailwind CSS 4 |
+| 状态管理 | Zustand |
+| 服务端 | Express 5 + TypeScript |
+| 数据库 | SQLite |
+| AI 调用 | 服务端代理 OpenAI 兼容接口 |
+| 包管理 | pnpm |
 
 ## 本地开发
 
-```bash
-# 安装依赖
-pnpm install
+### 1. 安装依赖
 
-# 启动开发服务器
+```bash
+pnpm install
+```
+
+### 2. 配置环境变量
+
+复制 `.env.example` 为 `.env`，至少配置：
+
+```bash
+OPENAI_API_KEY=你的模型密钥
+```
+
+可选项：
+
+```bash
+PORT=3001
+DATABASE_PATH=.data/infinite-craft.db
+AI_BASE_URL=https://api.deepseek.com
+AI_MODEL=deepseek-chat
+AI_TIMEOUT_MS=10000
+```
+
+### 3. 启动开发环境
+
+```bash
+pnpm dev
+```
+
+这会同时启动：
+
+- 前端开发服务器：`http://localhost:5173`
+- 后端 API 服务：`http://localhost:3001`
+
+前端开发环境已内置 `/api` 代理，无需额外配置跨域。
+
+## 常用命令
+
+```bash
+# 同时启动前后端开发环境
 pnpm dev
 
-# 构建生产版本
+# 构建前端并检查服务端 TypeScript
 pnpm build
 
-# 预览生产构建
+# 仅启动服务端
+pnpm start
+
+# 预览前端构建产物
 pnpm preview
 ```
 
-启动后访问 `http://localhost:5173` 即可体验。
+## 数据持久化
+
+- 游戏元素、配方、工作台布局、模型配置和合成次数都保存在 SQLite 数据库中。
+- 默认数据库文件路径是 `.data/infinite-craft.db`。
+- `OPENAI_API_KEY` 不会保存到前端，也不会写入数据库，只从服务器环境变量读取。
 
 ## 项目结构
 
-```
+```text
 src/
-├── components/        # UI 组件
-│   ├── ElementCard.tsx    # 元素卡片
-│   ├── Sidebar.tsx        # 左侧元素库面板
-│   ├── Workspace.tsx      # 工作台无限画布
-│   └── ContextMenu.tsx    # 右键上下文菜单
-├── hooks/             # 自定义 Hooks
-│   └── useCanvas.ts       # 画布缩放与平移
-├── services/          # 服务层 (AI API 调用)
-├── store/             # Zustand 状态管理
-│   ├── elementStore.ts    # 元素库状态
-│   ├── recipeStore.ts     # 配方缓存状态
-│   ├── workspaceStore.ts  # 工作台状态
-│   └── settingsStore.ts   # 设置状态
-├── types/             # TypeScript 类型定义
-├── utils/             # 工具函数与常量
-├── App.tsx            # 根组件
-├── main.tsx           # 入口
-└── index.css          # 全局样式
+├── components/              # 前端 UI 组件
+├── hooks/                   # 前端交互逻辑
+├── services/                # 前端 API 调用封装
+├── store/                   # Zustand 内存态
+├── types/                   # 共享类型定义
+└── utils/                   # 常量与工具函数
+
+server/
+├── config/                  # 环境变量读取
+├── db/                      # SQLite 连接与初始化
+├── routes/                  # API 路由
+└── services/                # 仓储层与 AI 服务
 ```
 
-## 功能进度
+## 服务器部署
 
-- [x] Phase 0 — 项目初始化
-- [x] Phase 1 — 数据层 (类型定义、Zustand Store、localStorage 持久化)
-- [x] Phase 2 — 元素卡片与侧边栏 (搜索、分类筛选、排序)
-- [x] Phase 3 — 工作台画布 (无限画布、缩放平移、元素拖拽、右键菜单)
-- [x] Phase 4 — 拖拽合成系统 (侧边栏拖出、碰撞检测、AI合成)
-- [x] Phase 5 — AI 合成服务 (OpenAI兼容API、重试机制、超时处理)
-- [ ] Phase 6 — 合成逻辑与动画
-- [ ] Phase 7 — 图鉴与配方表
-- [ ] Phase 8 — 合成树可视化
-- [ ] Phase 9 — 打磨与部署
+推荐部署方式：
+
+1. 安装 Node.js 22+ 和 pnpm。
+2. 拉取项目代码并执行 `pnpm install`。
+3. 配置 `.env`，至少设置 `OPENAI_API_KEY`。
+4. 执行 `pnpm build`。
+5. 用 `pnpm start` 启动服务端。
+6. 用 Nginx 反向代理到 `http://localhost:3001`。
+7. 把 `.data/` 目录纳入你的备份策略。
+
+如果你使用 PM2，可以直接运行：
+
+```bash
+pm2 start "pnpm start" --name infinite-craft
+```
+
+## 当前状态
+
+已完成：
+
+- 服务端 API 与 SQLite 初始化
+- 前端首屏从服务端加载状态
+- 工作台与设置自动同步到服务端
+- AI 合成改为服务端代理，不再暴露前端密钥
+- 最小可用设置弹窗
 
 ## 许可证
 

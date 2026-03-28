@@ -4,25 +4,38 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "concurrently \"pnpm dev:client\" \"pnpm dev:server\"",
+    "dev:client": "vite",
+    "dev:server": "tsx watch server/index.ts",
+    "build": "tsc -b && tsc -p tsconfig.server.json && vite build",
+    "start": "tsx server/index.ts",
     "preview": "vite preview"
   },
   "dependencies": {
+    "better-sqlite3": "^12.8.0",
+    "express": "^5.2.1",
     "framer-motion": "^11.18.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "zustand": "^5.0.3"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild"
+    ]
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.5.0",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.2.1",
     "tailwindcss": "^4.1.0",
+    "tsx": "^4.21.0",
     "typescript": "~5.6.2",
     "vite": "^6.0.5"
   }

@@ -4,6 +4,7 @@ import { useElementStore } from '../store/elementStore'
 import { useCanvas } from '../hooks/useCanvas'
 import { useCraft } from '../hooks/useCraft'
 import { screenToCanvas, generateId, checkOverlap } from '../utils/helpers'
+import CraftAnimation from './CraftAnimation'
 import ElementCard from './ElementCard'
 import ContextMenu, { type ContextMenuItem } from './ContextMenu'
 
@@ -23,7 +24,7 @@ const Workspace = forwardRef<WorkspaceHandle>(function Workspace(_, ref) {
   const { scale, panX, panY } = useCanvas(containerRef)
   const { items, moveItem, removeItem, clearAll, addItem } = useWorkspaceStore()
   const getElement = useElementStore(s => s.getElement)
-  const { craft, crafting, craftingIds } = useCraft()
+  const { craft, crafting, craftingIds, animation, notice } = useCraft()
 
   const [dragging, setDragging] = useState<DragState | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -223,17 +224,27 @@ const Workspace = forwardRef<WorkspaceHandle>(function Workspace(_, ref) {
         </div>
       )}
 
+      {notice && (
+        <div className={`absolute top-14 left-1/2 z-20 -translate-x-1/2 rounded-full px-4 py-2 text-sm font-medium shadow-lg pointer-events-none ${
+          notice.type === 'success'
+            ? 'bg-emerald-500 text-white'
+            : 'bg-rose-500 text-white'
+        }`}>
+          {notice.message}
+        </div>
+      )}
+
       {/* Canvas layer */}
       <div
         ref={canvasLayerRef}
+        className="absolute inset-0"
         style={{
           transform: `translate(${panX}px, ${panY}px) scale(${scale})`,
           transformOrigin: '0 0',
-          position: 'absolute',
-          top: 0,
-          left: 0,
         }}
       >
+        <CraftAnimation animation={animation} />
+
         {items.map(item => {
           const element = getElement(item.elementId)
           if (!element) return null
@@ -252,7 +263,7 @@ const Workspace = forwardRef<WorkspaceHandle>(function Workspace(_, ref) {
                 transform: `translate(${item.x}px, ${item.y}px)`,
                 zIndex: isDragging ? 999 : isSelected ? 100 : 1,
                 transition: isDragging ? 'none' : 'transform 0.1s ease',
-                opacity: isCrafting ? 0.5 : 1,
+                opacity: isCrafting ? 0.12 : 1,
                 pointerEvents: isCrafting ? 'none' : 'auto',
               }}
               onPointerDown={e => handleElementPointerDown(e, item.instanceId)}

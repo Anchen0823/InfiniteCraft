@@ -152,23 +152,28 @@ export default function Sidebar({ onDropToWorkspace }: SidebarProps) {
         <div className="flex-1 overflow-y-auto px-3 py-2">
           <div className="flex flex-col gap-1.5">
             <AnimatePresence mode="popLayout">
-              {filteredElements.map(el => (
-                <motion.div
-                  key={el.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  <ElementCard
-                    emoji={el.emoji}
-                    name={el.name}
-                    size="sm"
-                    isNew={!el.isBase && Date.now() - el.discoveredAt < 10000}
-                    onPointerDown={e => handleSidebarPointerDown(e, el)}
-                  />
-                </motion.div>
-              ))}
+              {filteredElements.map(el => {
+                const recentlyDiscovered = !el.isBase && Date.now() - el.discoveredAt < 10000
+
+                return (
+                  <motion.div
+                    key={el.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    <ElementCard
+                      emoji={el.emoji}
+                      name={el.name}
+                      size="sm"
+                      isNew={recentlyDiscovered}
+                      className={recentlyDiscovered ? 'ring-2 ring-amber-300 bg-amber-50/80' : ''}
+                      onPointerDown={e => handleSidebarPointerDown(e, el)}
+                    />
+                  </motion.div>
+                )
+              })}
             </AnimatePresence>
 
             {filteredElements.length === 0 && (

@@ -1,4 +1,4 @@
-import type { Element, AIConfig } from '../types'
+import type { Element, AIConfig } from '../types/index.js'
 
 export const BASE_ELEMENTS: Element[] = [
   { id: 'metal', name: '金', emoji: '🪙', categories: ['五行'], isBase: true, discoveredAt: 0 },
@@ -31,9 +31,9 @@ export const AI_PRESETS: { label: string; config: Partial<AIConfig> }[] = [
 ]
 
 export const DEFAULT_AI_CONFIG: AIConfig = {
-  apiKey: '',
   baseUrl: 'https://api.deepseek.com',
   model: 'deepseek-chat',
+  timeoutMs: 10000,
 }
 
 export const SYSTEM_PROMPT = `你是一个元素合成游戏的裁判。用户将两种元素合成，你需要返回合成结果。
