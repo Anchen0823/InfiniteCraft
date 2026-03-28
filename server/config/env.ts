@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import { resolve } from 'node:path'
 import { DEFAULT_AI_CONFIG } from '../../src/utils/constants.js'
 import type { AIConfig } from '../../src/types/index.js'

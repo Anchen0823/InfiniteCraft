@@ -580,12 +580,12 @@ src/store/recipeStore.ts         — 集成缓存查询
 
 ### 任务清单
 
-- [ ] **页面路由 / 弹窗切换**
+- [x] **页面路由 / 弹窗切换**
   - 方案 A（推荐）：使用 Modal/Drawer 覆盖层，无需路由库
-  - 顶部 Toolbar 按钮："图鉴"、"合成树" 打开对应弹窗
+  - 顶部 Toolbar 按钮："图鉴"、"配方表"、"设置" 打开对应弹窗
   - `Escape` 关闭弹窗
 
-- [ ] **Encyclopedia 图鉴组件** `src/components/Encyclopedia.tsx`
+- [x] **Encyclopedia 图鉴组件** `src/components/Encyclopedia.tsx`
   - 表格展示所有已发现元素
   - 列：Emoji + 名称 | 类别标签 | 发现时间 | 发现配方
   - 顶部搜索框：按名称过滤
@@ -593,16 +593,16 @@ src/store/recipeStore.ts         — 集成缓存查询
   - 按发现时间倒序排列（最新的在前）
   - 显示总数统计
 
-- [ ] **RecipeTable 配方表组件** `src/components/RecipeTable.tsx`
+- [x] **RecipeTable 配方表组件** `src/components/RecipeTable.tsx`
   - 表格展示所有已知配方
   - 列：元素A + 元素B → 结果 | 发现时间
   - 搜索：输入元素名称，展示包含该元素的所有配方
   - 反向查询：点击某元素，查看其所有合成来源（哪些配方产出它）和去向（它参与了哪些配方）
   - 空状态提示
 
-- [ ] **Toolbar 组件** `src/components/Toolbar.tsx`
+- [x] **Toolbar 组件** `src/components/Toolbar.tsx`
   - 应用标题/Logo
-  - 功能按钮：图鉴、合成树、设置
+  - 功能按钮：图鉴、配方表、设置
   - 按钮 hover 提示
 
 ### 涉及文件

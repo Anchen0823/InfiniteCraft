@@ -1,6 +1,9 @@
 import { useRef, useCallback, useEffect, useState } from 'react'
+import Encyclopedia from './components/Encyclopedia'
+import RecipeTable from './components/RecipeTable'
 import Sidebar from './components/Sidebar'
 import SettingsModal from './components/SettingsModal'
+import Toolbar from './components/Toolbar'
 import Workspace, { type WorkspaceHandle } from './components/Workspace'
 import { loadAppState, saveSettings, saveWorkspaceState } from './services/state'
 import { useElementStore } from './store/elementStore'
@@ -12,7 +15,7 @@ function App() {
   const workspaceRef = useRef<WorkspaceHandle>(null)
   const [isReady, setIsReady] = useState(false)
   const [bootstrapError, setBootstrapError] = useState<string | null>(null)
-  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [activePanel, setActivePanel] = useState<'encyclopedia' | 'recipes' | 'settings' | null>(null)
   const hasApiKey = useSettingsStore(s => s.hasApiKey)
 
   const bootstrap = useCallback(async () => {
@@ -84,6 +87,21 @@ function App() {
   }, [isReady])
 
   useEffect(() => {
+    if (!activePanel) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setActivePanel(null)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [activePanel])
+
+  useEffect(() => {
     if (!isReady) return
 
     let timeoutId: number | undefined
@@ -150,28 +168,19 @@ function App() {
       <Sidebar onDropToWorkspace={handleDropToWorkspace} />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="h-12 bg-white border-b border-gray-200 flex items-center px-4 gap-3 shrink-0">
-          <span className="text-lg font-bold text-gray-800">🧪 无尽炼金</span>
-          <button
-            type="button"
-            onClick={() => setSettingsOpen(true)}
-            className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 transition-colors"
-          >
-            设置
-          </button>
-          <span className={`ml-auto text-xs px-2 py-1 rounded-full border ${
-            hasApiKey
-              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-              : 'bg-amber-50 text-amber-700 border-amber-200'
-          }`}>
-            {hasApiKey ? 'AI 已就绪' : 'AI Key 未配置'}
-          </span>
-        </div>
+        <Toolbar
+          hasApiKey={hasApiKey}
+          onOpenEncyclopedia={() => setActivePanel('encyclopedia')}
+          onOpenRecipes={() => setActivePanel('recipes')}
+          onOpenSettings={() => setActivePanel('settings')}
+        />
 
         <Workspace ref={workspaceRef} />
       </div>
 
-      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <Encyclopedia open={activePanel === 'encyclopedia'} onClose={() => setActivePanel(null)} />
+      <RecipeTable open={activePanel === 'recipes'} onClose={() => setActivePanel(null)} />
+      <SettingsModal open={activePanel === 'settings'} onClose={() => setActivePanel(null)} />
     </div>
   )
 }
