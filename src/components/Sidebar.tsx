@@ -77,7 +77,7 @@ export default function Sidebar({ onDropToWorkspace }: SidebarProps) {
 
   if (collapsed) {
     return (
-      <div className="w-10 bg-white border-r border-gray-200 flex flex-col items-center pt-4">
+      <div className="h-full w-full bg-white border-r border-gray-200 md:w-10 flex flex-col items-center pt-4">
         <button
           onClick={() => setCollapsed(false)}
           className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors"
@@ -91,7 +91,7 @@ export default function Sidebar({ onDropToWorkspace }: SidebarProps) {
 
   return (
     <>
-      <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
+      <div className="h-full w-full bg-white border-r border-gray-200 md:w-64 flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
           <h2 className="text-sm font-bold text-gray-700">元素库</h2>

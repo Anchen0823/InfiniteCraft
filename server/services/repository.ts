@@ -1,5 +1,6 @@
 import type { Database } from 'better-sqlite3'
 import {
+  BASE_ELEMENTS,
   DEFAULT_AI_CONFIG,
 } from '../../src/utils/constants.js'
 import type {
@@ -279,6 +280,91 @@ export class Repository {
       workspace: this.getWorkspace(),
       settings: this.getSettings(),
     }
+  }
+
+  replaceAppState(input: AppStatePayload): AppStatePayload {
+    const replace = this.database.transaction(() => {
+      this.database.prepare('DELETE FROM workspace_items').run()
+      this.database.prepare('DELETE FROM recipes').run()
+      this.database.prepare('DELETE FROM elements').run()
+
+      const insertElement = this.database.prepare(
+        `
+          INSERT INTO elements (id, name, emoji, categories, is_base, discovered_at)
+          VALUES (@id, @name, @emoji, @categories, @isBase, @discoveredAt)
+        `,
+      )
+
+      for (const element of input.elements) {
+        insertElement.run({
+          id: element.id,
+          name: element.name,
+          emoji: element.emoji,
+          categories: JSON.stringify(element.categories),
+          isBase: element.isBase ? 1 : 0,
+          discoveredAt: element.discoveredAt,
+        })
+      }
+
+      const insertRecipe = this.database.prepare(
+        `
+          INSERT INTO recipes (id, input_a, input_b, result_id, discovered_at)
+          VALUES (?, ?, ?, ?, ?)
+        `,
+      )
+
+      for (const recipe of input.recipes) {
+        const [inputA, inputB] = normalizeRecipeInputs(recipe.inputA, recipe.inputB)
+        insertRecipe.run(recipe.id, inputA, inputB, recipe.resultId, recipe.discoveredAt)
+      }
+
+      const insertWorkspaceItem = this.database.prepare(
+        `
+          INSERT INTO workspace_items (instance_id, element_id, x, y)
+          VALUES (@instanceId, @elementId, @x, @y)
+        `,
+      )
+
+      for (const item of input.workspace.items) {
+        insertWorkspaceItem.run(item)
+      }
+
+      writeSetting(this.database, 'workspaceView', JSON.stringify({
+        scale: input.workspace.scale,
+        panX: input.workspace.panX,
+        panY: input.workspace.panY,
+      }))
+
+      writeSetting(this.database, 'aiConfig', JSON.stringify({
+        baseUrl: input.settings.aiConfig.baseUrl,
+        model: input.settings.aiConfig.model,
+        timeoutMs: input.settings.aiConfig.timeoutMs,
+      }))
+      writeSetting(this.database, 'craftCount', String(Math.max(0, Math.floor(input.settings.craftCount))))
+    })
+
+    replace()
+    return this.getAppState()
+  }
+
+  resetProgress(): AppStatePayload {
+    const currentSettings = this.getSettings()
+
+    return this.replaceAppState({
+      elements: BASE_ELEMENTS,
+      recipes: [],
+      workspace: {
+        items: [],
+        scale: 1,
+        panX: 0,
+        panY: 0,
+      },
+      settings: {
+        aiConfig: currentSettings.aiConfig,
+        craftCount: 0,
+        hasApiKey: currentSettings.hasApiKey,
+      },
+    })
   }
 }
 

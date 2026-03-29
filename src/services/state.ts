@@ -55,3 +55,31 @@ export async function saveSettings(input: {
 
   return response.json() as Promise<SettingsPayload>
 }
+
+export async function importAppState(payload: AppStatePayload): Promise<AppStatePayload> {
+  const response = await fetch('/api/state/import', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+
+  if (!response.ok) {
+    throw new Error(await readErrorMessage(response))
+  }
+
+  return response.json() as Promise<AppStatePayload>
+}
+
+export async function resetAppState(): Promise<AppStatePayload> {
+  const response = await fetch('/api/state/reset', {
+    method: 'POST',
+  })
+
+  if (!response.ok) {
+    throw new Error(await readErrorMessage(response))
+  }
+
+  return response.json() as Promise<AppStatePayload>
+}

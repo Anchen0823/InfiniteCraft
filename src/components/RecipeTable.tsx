@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useVirtualList } from '../hooks/useVirtualList'
 import { useElementStore } from '../store/elementStore'
 import { useRecipeStore } from '../store/recipeStore'
 
@@ -16,6 +17,8 @@ function formatTimestamp(timestamp: number) {
     minute: '2-digit',
   })
 }
+
+const ROW_HEIGHT = 84
 
 export default function RecipeTable({ open, onClose }: RecipeTableProps) {
   const recipes = useRecipeStore(s => s.recipes)
@@ -61,6 +64,16 @@ export default function RecipeTable({ open, onClose }: RecipeTableProps) {
 
     return { produces, uses }
   }, [recipeRows, selectedElement])
+
+  const virtualList = useVirtualList({
+    itemCount: filteredRows.length,
+    itemHeight: ROW_HEIGHT,
+  })
+
+  const visibleRows = useMemo(
+    () => filteredRows.slice(virtualList.start, virtualList.end),
+    [filteredRows, virtualList.start, virtualList.end],
+  )
 
   if (!open) return null
 
@@ -113,49 +126,62 @@ export default function RecipeTable({ open, onClose }: RecipeTableProps) {
         </div>
 
         <div className="grid min-h-0 flex-1 gap-0 lg:grid-cols-[1.6fr_1fr]">
-          <div className="min-h-0 overflow-auto border-r border-gray-100">
+          <div className="min-h-0 border-r border-gray-100">
             {filteredRows.length === 0 ? (
               <div className="flex h-full items-center justify-center text-sm text-gray-400">
                 没有匹配的配方
               </div>
             ) : (
-              <table className="min-w-full text-left text-sm">
-                <thead className="sticky top-0 bg-gray-50 text-gray-500">
-                  <tr>
-                    <th className="px-5 py-3 font-medium">配方</th>
-                    <th className="px-5 py-3 font-medium">结果</th>
-                    <th className="px-5 py-3 font-medium">发现时间</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredRows.map(({ recipe, resultElement }) => (
-                    <tr key={recipe.id} className="border-t border-gray-100 align-top">
-                      <td className="px-5 py-4">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <ElementLink name={recipe.inputA} onClick={setSelectedElement} />
-                          <span className="text-gray-400">+</span>
-                          <ElementLink name={recipe.inputB} onClick={setSelectedElement} />
+              <>
+                <div className="grid grid-cols-[1.5fr_1fr_1fr] bg-gray-50 px-5 py-3 text-left text-sm text-gray-500">
+                  <div className="font-medium">配方</div>
+                  <div className="font-medium">结果</div>
+                  <div className="font-medium">发现时间</div>
+                </div>
+
+                <div
+                  ref={virtualList.containerRef}
+                  onScroll={virtualList.onScroll}
+                  className="h-full overflow-auto"
+                >
+                  <div style={{ height: virtualList.totalHeight, position: 'relative' }}>
+                    <div style={{ transform: `translateY(${virtualList.offsetTop}px)` }}>
+                      {visibleRows.map(({ recipe, resultElement }) => (
+                        <div
+                          key={recipe.id}
+                          className="grid grid-cols-[1.5fr_1fr_1fr] border-t border-gray-100 px-5 py-4 text-sm"
+                          style={{ minHeight: `${ROW_HEIGHT}px` }}
+                        >
+                          <div className="pr-4">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <ElementLink name={recipe.inputA} onClick={setSelectedElement} />
+                              <span className="text-gray-400">+</span>
+                              <ElementLink name={recipe.inputB} onClick={setSelectedElement} />
+                            </div>
+                          </div>
+
+                          <div className="pr-4">
+                            {resultElement ? (
+                              <button
+                                type="button"
+                                onClick={() => setSelectedElement(resultElement.name)}
+                                className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-1.5 text-emerald-700 hover:bg-emerald-100 transition-colors"
+                              >
+                                <span>{resultElement.emoji}</span>
+                                <span>{resultElement.name}</span>
+                              </button>
+                            ) : (
+                              <span className="text-gray-400">无法合成</span>
+                            )}
+                          </div>
+
+                          <div className="text-gray-600">{formatTimestamp(recipe.discoveredAt)}</div>
                         </div>
-                      </td>
-                      <td className="px-5 py-4">
-                        {resultElement ? (
-                          <button
-                            type="button"
-                            onClick={() => setSelectedElement(resultElement.name)}
-                            className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-1.5 text-emerald-700 hover:bg-emerald-100 transition-colors"
-                          >
-                            <span>{resultElement.emoji}</span>
-                            <span>{resultElement.name}</span>
-                          </button>
-                        ) : (
-                          <span className="text-gray-400">无法合成</span>
-                        )}
-                      </td>
-                      <td className="px-5 py-4 text-gray-600">{formatTimestamp(recipe.discoveredAt)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </>
             )}
           </div>
 

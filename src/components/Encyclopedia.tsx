@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useVirtualList } from '../hooks/useVirtualList'
 import { useElementStore } from '../store/elementStore'
 import { useRecipeStore } from '../store/recipeStore'
 
@@ -18,6 +19,8 @@ function formatTimestamp(timestamp: number) {
     minute: '2-digit',
   })
 }
+
+const ROW_HEIGHT = 88
 
 export default function Encyclopedia({ open, onClose }: EncyclopediaProps) {
   const elementMap = useElementStore(s => s.elements)
@@ -52,6 +55,16 @@ export default function Encyclopedia({ open, onClose }: EncyclopediaProps) {
       })
       .sort((a, b) => b.discoveredAt - a.discoveredAt || a.name.localeCompare(b.name, 'zh-CN'))
   }, [elements, search, activeCategory])
+
+  const virtualList = useVirtualList({
+    itemCount: filteredElements.length,
+    itemHeight: ROW_HEIGHT,
+  })
+
+  const visibleElements = useMemo(
+    () => filteredElements.slice(virtualList.start, virtualList.end),
+    [filteredElements, virtualList.start, virtualList.end],
+  )
 
   if (!open) return null
 
@@ -106,61 +119,67 @@ export default function Encyclopedia({ open, onClose }: EncyclopediaProps) {
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-auto">
+        <div className="grid grid-cols-[2fr_1.2fr_1fr_1.4fr] border-b border-gray-100 bg-gray-50 px-5 py-3 text-left text-sm text-gray-500">
+          <div className="font-medium">元素</div>
+          <div className="font-medium">类别</div>
+          <div className="font-medium">发现时间</div>
+          <div className="font-medium">发现方式</div>
+        </div>
+
+        <div
+          ref={virtualList.containerRef}
+          onScroll={virtualList.onScroll}
+          className="min-h-0 flex-1 overflow-auto"
+        >
           {filteredElements.length === 0 ? (
             <div className="flex h-full items-center justify-center text-sm text-gray-400">
               没有匹配的元素
             </div>
           ) : (
-            <table className="min-w-full text-left text-sm">
-              <thead className="sticky top-0 bg-gray-50 text-gray-500">
-                <tr>
-                  <th className="px-5 py-3 font-medium">元素</th>
-                  <th className="px-5 py-3 font-medium">类别</th>
-                  <th className="px-5 py-3 font-medium">发现时间</th>
-                  <th className="px-5 py-3 font-medium">发现方式</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredElements.map(element => {
+            <div style={{ height: virtualList.totalHeight, position: 'relative' }}>
+              <div style={{ transform: `translateY(${virtualList.offsetTop}px)` }}>
+                {visibleElements.map(element => {
                   const recipe = recipeMap.get(element.id)
 
                   return (
-                    <tr key={element.id} className="border-t border-gray-100 align-top">
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl">{element.emoji}</span>
-                          <div>
-                            <div className="font-medium text-gray-800">{element.name}</div>
-                            {element.isBase && (
-                              <div className="mt-1 text-xs text-amber-600">基础元素</div>
-                            )}
-                          </div>
+                    <div
+                      key={element.id}
+                      className="grid grid-cols-[2fr_1.2fr_1fr_1.4fr] border-t border-gray-100 px-5 py-4 text-sm"
+                      style={{ minHeight: `${ROW_HEIGHT}px` }}
+                    >
+                      <div className="flex items-center gap-3 pr-4">
+                        <span className="text-2xl">{element.emoji}</span>
+                        <div className="min-w-0">
+                          <div className="font-medium text-gray-800">{element.name}</div>
+                          {element.isBase && (
+                            <div className="mt-1 text-xs text-amber-600">基础元素</div>
+                          )}
                         </div>
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="flex flex-wrap gap-1.5">
-                          {element.categories.map(category => (
-                            <span
-                              key={category}
-                              className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600"
-                            >
-                              {category}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="px-5 py-4 text-gray-600">{formatTimestamp(element.discoveredAt)}</td>
-                      <td className="px-5 py-4 text-gray-600">
+                      </div>
+
+                      <div className="flex flex-wrap content-start gap-1.5 pr-4">
+                        {element.categories.map(category => (
+                          <span
+                            key={category}
+                            className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600"
+                          >
+                            {category}
+                          </span>
+                        ))}
+                      </div>
+
+                      <div className="pr-4 text-gray-600">{formatTimestamp(element.discoveredAt)}</div>
+
+                      <div className="text-gray-600">
                         {recipe
                           ? `${recipe.inputA} + ${recipe.inputB} -> ${element.name}`
                           : '初始解锁'}
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   )
                 })}
-              </tbody>
-            </table>
+              </div>
+            </div>
           )}
         </div>
       </div>

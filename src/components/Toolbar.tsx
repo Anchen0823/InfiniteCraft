@@ -2,6 +2,7 @@ interface ToolbarProps {
   hasApiKey: boolean
   onOpenEncyclopedia: () => void
   onOpenRecipes: () => void
+  onOpenCraftTree: () => void
   onOpenSettings: () => void
 }
 
@@ -9,15 +10,17 @@ export default function Toolbar({
   hasApiKey,
   onOpenEncyclopedia,
   onOpenRecipes,
+  onOpenCraftTree,
   onOpenSettings,
 }: ToolbarProps) {
   return (
-    <div className="h-12 bg-white border-b border-gray-200 flex items-center px-4 gap-2 shrink-0">
+    <div className="min-h-12 bg-white border-b border-gray-200 flex flex-wrap items-center px-4 py-2 gap-2 shrink-0">
       <span className="text-lg font-bold text-gray-800">🧪 无尽炼金</span>
 
-      <div className="ml-3 flex items-center gap-2">
+      <div className="ml-0 flex flex-wrap items-center gap-2 md:ml-3">
         <ToolbarButton label="图鉴" onClick={onOpenEncyclopedia} />
         <ToolbarButton label="配方表" onClick={onOpenRecipes} />
+        <ToolbarButton label="合成树" onClick={onOpenCraftTree} />
         <ToolbarButton label="设置" onClick={onOpenSettings} />
       </div>
 

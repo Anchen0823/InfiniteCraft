@@ -88,3 +88,13 @@ export interface CraftNotice {
   type: 'success' | 'error'
   message: string
 }
+
+export interface CraftTreeNodeData extends Record<string, unknown> {
+  elementId: string
+  emoji: string
+  name: string
+  categories: string[]
+  isBase: boolean
+  depth: number
+  sourceCount: number
+}

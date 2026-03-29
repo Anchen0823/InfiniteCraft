@@ -582,7 +582,7 @@ src/store/recipeStore.ts         — 集成缓存查询
 
 - [x] **页面路由 / 弹窗切换**
   - 方案 A（推荐）：使用 Modal/Drawer 覆盖层，无需路由库
-  - 顶部 Toolbar 按钮："图鉴"、"配方表"、"设置" 打开对应弹窗
+  - 顶部 Toolbar 按钮："图鉴"、"配方表"、"合成树"、"设置" 打开对应弹窗
   - `Escape` 关闭弹窗
 
 - [x] **Encyclopedia 图鉴组件** `src/components/Encyclopedia.tsx`
@@ -629,7 +629,7 @@ src/App.tsx                      — 集成弹窗状态管理
 
 ### 任务清单
 
-- [ ] **技术选型决策**
+- [x] **技术选型决策**
   - 方案 A：使用 `reactflow`（@xyflow/react）— 功能完善，自带缩放平移、节点拖拽
   - 方案 B：纯 SVG/Canvas 手动绘制 — 更轻量但开发量大
   - **推荐方案 A**，安装：
@@ -637,7 +637,7 @@ src/App.tsx                      — 集成弹窗状态管理
     pnpm add @xyflow/react
     ```
 
-- [ ] **CraftTree 组件** `src/components/CraftTree.tsx`
+- [x] **CraftTree 组件** `src/components/CraftTree.tsx`
   - 将 Recipe 数据转换为 reactflow 的 nodes 和 edges：
     - 每个 Element 是一个节点（展示 Emoji + 名称）
     - 每个 Recipe 表示两条边（A→结果, B→结果），可通过中间"+"节点连接
@@ -649,11 +649,11 @@ src/App.tsx                      — 集成弹窗状态管理
     - 缩放平移浏览完整合成树
     - 鼠标悬停节点 → 显示元素详情 Tooltip
 
-- [ ] **搜索定位**
+- [x] **搜索定位**
   - 输入元素名称 → 画布自动平移+缩放到该节点位置
   - 高亮搜索到的节点
 
-- [ ] **数据转换工具** `src/utils/helpers.ts`
+- [x] **数据转换工具** `src/utils/helpers.ts`
   ```typescript
   function buildTreeData(elements: Element[], recipes: Recipe[]): { nodes, edges } {
     // 将元素和配方数据转换为 reactflow 格式
@@ -674,6 +674,14 @@ src/utils/helpers.ts             — 新增 buildTreeData
 - 可缩放平移浏览，搜索可定位到指定节点
 - 节点样式美观，与主界面风格一致
 
+**后续性能备注**：
+- 当前版本已完成合成树懒加载，图鉴/配方表已接入虚拟列表，可支撑中等规模数据
+- 如果元素数量进一步增长到上千级，优先继续优化合成树而不是表格页
+- 推荐后续优化顺序：
+  - 仅渲染某个元素附近的局部子图，而不是默认展示全量关系
+  - 为节点高亮和搜索定位建立邻接表索引，减少每次交互的全量边扫描
+  - 缓存 `buildTreeData()` 和布局结果，避免重复执行 `dagre` 自动布局
+
 ---
 
 ## Phase 9 — 打磨与部署
@@ -690,11 +698,11 @@ src/utils/helpers.ts             — 新增 buildTreeData
   - 鼠标滚轮：缩放画布
   - 中键拖拽 / 空格+左键拖拽：平移画布
 
-- [ ] **StatusBar 状态栏** `src/components/StatusBar.tsx`
+- [x] **StatusBar 状态栏** `src/components/StatusBar.tsx`
   - 显示：已发现 N 种元素 | 合成次数: M
   - 实时更新
 
-- [ ] **响应式布局**
+- [x] **响应式布局**
   - 桌面端：左侧侧边栏 + 右侧工作台
   - 小屏幕：侧边栏切换为底部抽屉
   - 极端小屏提示"请在桌面端使用以获得最佳体验"
@@ -706,7 +714,7 @@ src/utils/helpers.ts             — 新增 buildTreeData
   - 网络错误 / API 错误 → 友好的 Toast 提示
   - 请求频率限制（防止短时间内大量合成请求）
 
-- [ ] **数据相关**
+- [x] **数据相关**
   - 数据库写入失败时给出友好提示
   - 提供"导出数据"功能（JSON 导出所有元素和配方）
   - 提供"导入数据"功能

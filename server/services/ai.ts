@@ -67,7 +67,7 @@ export async function craftWithAi(
       const parsed = JSON.parse(extractJsonBlock(content)) as Partial<CraftResult> & { name?: string | null }
 
       if (parsed.name === null || parsed.name === undefined) {
-        return null
+        throw new Error('模型返回了空结果，已要求非违禁组合必须生成结果')
       }
 
       if (!parsed.name || !parsed.emoji || !Array.isArray(parsed.categories)) {

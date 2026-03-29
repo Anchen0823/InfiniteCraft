@@ -1,8 +1,10 @@
-import { useRef, useCallback, useEffect, useState } from 'react'
+import { Suspense, lazy, useRef, useCallback, useEffect, useState } from 'react'
 import Encyclopedia from './components/Encyclopedia'
 import RecipeTable from './components/RecipeTable'
 import Sidebar from './components/Sidebar'
 import SettingsModal from './components/SettingsModal'
+import StatusBar from './components/StatusBar'
+import ToastViewport, { type ToastItem } from './components/ToastViewport'
 import Toolbar from './components/Toolbar'
 import Workspace, { type WorkspaceHandle } from './components/Workspace'
 import { loadAppState, saveSettings, saveWorkspaceState } from './services/state'
@@ -10,13 +12,37 @@ import { useElementStore } from './store/elementStore'
 import { useRecipeStore } from './store/recipeStore'
 import { useSettingsStore } from './store/settingsStore'
 import { useWorkspaceStore } from './store/workspaceStore'
+import { generateId } from './utils/helpers'
+
+const CraftTree = lazy(() => import('./components/CraftTree'))
 
 function App() {
   const workspaceRef = useRef<WorkspaceHandle>(null)
   const [isReady, setIsReady] = useState(false)
   const [bootstrapError, setBootstrapError] = useState<string | null>(null)
-  const [activePanel, setActivePanel] = useState<'encyclopedia' | 'recipes' | 'settings' | null>(null)
+  const [activePanel, setActivePanel] = useState<'encyclopedia' | 'recipes' | 'craftTree' | 'settings' | null>(null)
+  const [toasts, setToasts] = useState<ToastItem[]>([])
   const hasApiKey = useSettingsStore(s => s.hasApiKey)
+
+  const dismissToast = useCallback((id: string) => {
+    setToasts(current => current.filter(toast => toast.id !== id))
+  }, [])
+
+  const pushToast = useCallback((message: string, type: ToastItem['type'] = 'info') => {
+    const id = generateId()
+
+    setToasts(current => {
+      if (current.some(toast => toast.message === message && toast.type === type)) {
+        return current
+      }
+
+      return [...current, { id, message, type }].slice(-4)
+    })
+
+    window.setTimeout(() => {
+      setToasts(current => current.filter(toast => toast.id !== id))
+    }, 3200)
+  }, [])
 
   const bootstrap = useCallback(async () => {
     try {
@@ -76,6 +102,7 @@ function App() {
       timeoutId = window.setTimeout(() => {
         void saveWorkspaceState(snapshot).catch(error => {
           console.error('同步工作台失败:', error)
+          pushToast('工作台同步失败，稍后修改将继续自动重试', 'error')
         })
       }, 300)
     })
@@ -84,7 +111,7 @@ function App() {
       window.clearTimeout(timeoutId)
       unsubscribe()
     }
-  }, [isReady])
+  }, [isReady, pushToast])
 
   useEffect(() => {
     if (!activePanel) return
@@ -131,6 +158,7 @@ function App() {
           })
           .catch(error => {
             console.error('同步设置失败:', error)
+            pushToast('设置保存失败，请稍后重试', 'error')
           })
       }, 400)
     })
@@ -139,7 +167,7 @@ function App() {
       window.clearTimeout(timeoutId)
       unsubscribe()
     }
-  }, [isReady])
+  }, [isReady, pushToast])
 
   if (!isReady) {
     return (
@@ -164,23 +192,49 @@ function App() {
   }
 
   return (
-    <div className="h-screen flex bg-gray-50">
-      <Sidebar onDropToWorkspace={handleDropToWorkspace} />
+    <div className="h-screen overflow-hidden bg-gray-50">
+      <div className="flex h-full flex-col md:flex-row">
+        <div className="order-last h-72 border-t border-gray-200 md:order-first md:h-full md:border-t-0">
+          <Sidebar onDropToWorkspace={handleDropToWorkspace} />
+        </div>
 
-      <div className="flex-1 flex flex-col min-w-0">
+        <div className="min-h-0 flex-1 flex flex-col min-w-0">
         <Toolbar
           hasApiKey={hasApiKey}
           onOpenEncyclopedia={() => setActivePanel('encyclopedia')}
           onOpenRecipes={() => setActivePanel('recipes')}
+          onOpenCraftTree={() => setActivePanel('craftTree')}
           onOpenSettings={() => setActivePanel('settings')}
         />
 
         <Workspace ref={workspaceRef} />
+        <StatusBar />
+        </div>
       </div>
 
       <Encyclopedia open={activePanel === 'encyclopedia'} onClose={() => setActivePanel(null)} />
       <RecipeTable open={activePanel === 'recipes'} onClose={() => setActivePanel(null)} />
-      <SettingsModal open={activePanel === 'settings'} onClose={() => setActivePanel(null)} />
+      <Suspense fallback={<OverlayFallback title="正在加载合成树..." />}>
+        {activePanel === 'craftTree' && (
+          <CraftTree open onClose={() => setActivePanel(null)} />
+        )}
+      </Suspense>
+      <SettingsModal
+        open={activePanel === 'settings'}
+        onClose={() => setActivePanel(null)}
+        onNotify={pushToast}
+      />
+      <ToastViewport toasts={toasts} onDismiss={dismissToast} />
+    </div>
+  )
+}
+
+function OverlayFallback({ title }: { title: string }) {
+  return (
+    <div className="fixed inset-0 z-40 bg-black/40 p-4">
+      <div className="mx-auto flex h-full max-w-7xl items-center justify-center rounded-2xl border border-gray-200 bg-white shadow-xl">
+        <div className="text-sm text-gray-500">{title}</div>
+      </div>
     </div>
   )
 }
