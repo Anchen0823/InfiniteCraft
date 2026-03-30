@@ -69,12 +69,12 @@ export default function Encyclopedia({ open, onClose }: EncyclopediaProps) {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-40 bg-black/40 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-40 bg-black/40 p-2 sm:p-4" onClick={onClose}>
       <div
-        className="mx-auto flex h-full max-w-6xl flex-col rounded-2xl border border-gray-200 bg-white shadow-xl"
+        className="mx-auto flex h-full w-full max-w-6xl flex-col rounded-2xl border border-gray-200 bg-white shadow-xl"
         onClick={event => event.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+        <div className="flex flex-col gap-3 border-b border-gray-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
           <div>
             <h2 className="text-lg font-semibold text-gray-800">元素图鉴</h2>
             <p className="mt-1 text-sm text-gray-500">查看所有已发现元素、类别和首次发现方式。</p>
@@ -88,7 +88,7 @@ export default function Encyclopedia({ open, onClose }: EncyclopediaProps) {
           </button>
         </div>
 
-        <div className="border-b border-gray-100 px-5 py-4 space-y-3">
+        <div className="border-b border-gray-100 px-4 py-4 space-y-3 sm:px-5">
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
             <input
               type="text"
@@ -119,13 +119,6 @@ export default function Encyclopedia({ open, onClose }: EncyclopediaProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-[2fr_1.2fr_1fr_1.4fr] border-b border-gray-100 bg-gray-50 px-5 py-3 text-left text-sm text-gray-500">
-          <div className="font-medium">元素</div>
-          <div className="font-medium">类别</div>
-          <div className="font-medium">发现时间</div>
-          <div className="font-medium">发现方式</div>
-        </div>
-
         <div
           ref={virtualList.containerRef}
           onScroll={virtualList.onScroll}
@@ -136,48 +129,57 @@ export default function Encyclopedia({ open, onClose }: EncyclopediaProps) {
               没有匹配的元素
             </div>
           ) : (
-            <div style={{ height: virtualList.totalHeight, position: 'relative' }}>
-              <div style={{ transform: `translateY(${virtualList.offsetTop}px)` }}>
-                {visibleElements.map(element => {
-                  const recipe = recipeMap.get(element.id)
+            <div className="min-w-[54rem]">
+              <div className="grid grid-cols-[2fr_1.2fr_1fr_1.4fr] border-b border-gray-100 bg-gray-50 px-4 py-3 text-left text-sm text-gray-500 sm:px-5">
+                <div className="font-medium">元素</div>
+                <div className="font-medium">类别</div>
+                <div className="font-medium">发现时间</div>
+                <div className="font-medium">发现方式</div>
+              </div>
 
-                  return (
-                    <div
-                      key={element.id}
-                      className="grid grid-cols-[2fr_1.2fr_1fr_1.4fr] border-t border-gray-100 px-5 py-4 text-sm"
-                      style={{ minHeight: `${ROW_HEIGHT}px` }}
-                    >
-                      <div className="flex items-center gap-3 pr-4">
-                        <span className="text-2xl">{element.emoji}</span>
-                        <div className="min-w-0">
-                          <div className="font-medium text-gray-800">{element.name}</div>
-                          {element.isBase && (
-                            <div className="mt-1 text-xs text-amber-600">基础元素</div>
-                          )}
+              <div style={{ height: virtualList.totalHeight, position: 'relative' }}>
+                <div style={{ transform: `translateY(${virtualList.offsetTop}px)` }}>
+                  {visibleElements.map(element => {
+                    const recipe = recipeMap.get(element.id)
+
+                    return (
+                      <div
+                        key={element.id}
+                        className="grid grid-cols-[2fr_1.2fr_1fr_1.4fr] border-t border-gray-100 px-4 py-4 text-sm sm:px-5"
+                        style={{ minHeight: `${ROW_HEIGHT}px` }}
+                      >
+                        <div className="flex items-center gap-3 pr-4">
+                          <span className="text-2xl">{element.emoji}</span>
+                          <div className="min-w-0">
+                            <div className="font-medium text-gray-800">{element.name}</div>
+                            {element.isBase && (
+                              <div className="mt-1 text-xs text-amber-600">基础元素</div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap content-start gap-1.5 pr-4">
+                          {element.categories.map(category => (
+                            <span
+                              key={category}
+                              className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600"
+                            >
+                              {category}
+                            </span>
+                          ))}
+                        </div>
+
+                        <div className="pr-4 text-gray-600">{formatTimestamp(element.discoveredAt)}</div>
+
+                        <div className="text-gray-600">
+                          {recipe
+                            ? `${recipe.inputA} + ${recipe.inputB} -> ${element.name}`
+                            : '初始解锁'}
                         </div>
                       </div>
-
-                      <div className="flex flex-wrap content-start gap-1.5 pr-4">
-                        {element.categories.map(category => (
-                          <span
-                            key={category}
-                            className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600"
-                          >
-                            {category}
-                          </span>
-                        ))}
-                      </div>
-
-                      <div className="pr-4 text-gray-600">{formatTimestamp(element.discoveredAt)}</div>
-
-                      <div className="text-gray-600">
-                        {recipe
-                          ? `${recipe.inputA} + ${recipe.inputB} -> ${element.name}`
-                          : '初始解锁'}
-                      </div>
-                    </div>
-                  )
-                })}
+                    )
+                  })}
+                </div>
               </div>
             </div>
           )}

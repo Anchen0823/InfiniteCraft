@@ -78,12 +78,12 @@ export default function RecipeTable({ open, onClose }: RecipeTableProps) {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-40 bg-black/40 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-40 bg-black/40 p-2 sm:p-4" onClick={onClose}>
       <div
-        className="mx-auto flex h-full max-w-6xl flex-col rounded-2xl border border-gray-200 bg-white shadow-xl"
+        className="mx-auto flex h-full w-full max-w-6xl flex-col rounded-2xl border border-gray-200 bg-white shadow-xl"
         onClick={event => event.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+        <div className="flex flex-col gap-3 border-b border-gray-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
           <div>
             <h2 className="text-lg font-semibold text-gray-800">配方表</h2>
             <p className="mt-1 text-sm text-gray-500">搜索配方，并查看某个元素的来源与去向。</p>
@@ -97,7 +97,7 @@ export default function RecipeTable({ open, onClose }: RecipeTableProps) {
           </button>
         </div>
 
-        <div className="border-b border-gray-100 px-5 py-4 space-y-3">
+        <div className="border-b border-gray-100 px-4 py-4 space-y-3 sm:px-5">
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
             <input
               type="text"
@@ -126,58 +126,60 @@ export default function RecipeTable({ open, onClose }: RecipeTableProps) {
         </div>
 
         <div className="grid min-h-0 flex-1 gap-0 lg:grid-cols-[1.6fr_1fr]">
-          <div className="min-h-0 border-r border-gray-100">
+          <div className="min-h-0 border-b border-gray-100 lg:border-b-0 lg:border-r">
             {filteredRows.length === 0 ? (
               <div className="flex h-full items-center justify-center text-sm text-gray-400">
                 没有匹配的配方
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-[1.5fr_1fr_1fr] bg-gray-50 px-5 py-3 text-left text-sm text-gray-500">
-                  <div className="font-medium">配方</div>
-                  <div className="font-medium">结果</div>
-                  <div className="font-medium">发现时间</div>
-                </div>
-
                 <div
                   ref={virtualList.containerRef}
                   onScroll={virtualList.onScroll}
                   className="h-full overflow-auto"
                 >
-                  <div style={{ height: virtualList.totalHeight, position: 'relative' }}>
-                    <div style={{ transform: `translateY(${virtualList.offsetTop}px)` }}>
-                      {visibleRows.map(({ recipe, resultElement }) => (
-                        <div
-                          key={recipe.id}
-                          className="grid grid-cols-[1.5fr_1fr_1fr] border-t border-gray-100 px-5 py-4 text-sm"
-                          style={{ minHeight: `${ROW_HEIGHT}px` }}
-                        >
-                          <div className="pr-4">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <ElementLink name={recipe.inputA} onClick={setSelectedElement} />
-                              <span className="text-gray-400">+</span>
-                              <ElementLink name={recipe.inputB} onClick={setSelectedElement} />
+                  <div className="min-w-[44rem]">
+                    <div className="grid grid-cols-[1.5fr_1fr_1fr] bg-gray-50 px-4 py-3 text-left text-sm text-gray-500 sm:px-5">
+                      <div className="font-medium">配方</div>
+                      <div className="font-medium">结果</div>
+                      <div className="font-medium">发现时间</div>
+                    </div>
+
+                    <div style={{ height: virtualList.totalHeight, position: 'relative' }}>
+                      <div style={{ transform: `translateY(${virtualList.offsetTop}px)` }}>
+                        {visibleRows.map(({ recipe, resultElement }) => (
+                          <div
+                            key={recipe.id}
+                            className="grid grid-cols-[1.5fr_1fr_1fr] border-t border-gray-100 px-4 py-4 text-sm sm:px-5"
+                            style={{ minHeight: `${ROW_HEIGHT}px` }}
+                          >
+                            <div className="pr-4">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <ElementLink name={recipe.inputA} onClick={setSelectedElement} />
+                                <span className="text-gray-400">+</span>
+                                <ElementLink name={recipe.inputB} onClick={setSelectedElement} />
+                              </div>
                             </div>
-                          </div>
 
-                          <div className="pr-4">
-                            {resultElement ? (
-                              <button
-                                type="button"
-                                onClick={() => setSelectedElement(resultElement.name)}
-                                className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-1.5 text-emerald-700 hover:bg-emerald-100 transition-colors"
-                              >
-                                <span>{resultElement.emoji}</span>
-                                <span>{resultElement.name}</span>
-                              </button>
-                            ) : (
-                              <span className="text-gray-400">无法合成</span>
-                            )}
-                          </div>
+                            <div className="pr-4">
+                              {resultElement ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedElement(resultElement.name)}
+                                  className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-1.5 text-emerald-700 hover:bg-emerald-100 transition-colors"
+                                >
+                                  <span>{resultElement.emoji}</span>
+                                  <span>{resultElement.name}</span>
+                                </button>
+                              ) : (
+                                <span className="text-gray-400">无法合成</span>
+                              )}
+                            </div>
 
-                          <div className="text-gray-600">{formatTimestamp(recipe.discoveredAt)}</div>
-                        </div>
-                      ))}
+                            <div className="text-gray-600">{formatTimestamp(recipe.discoveredAt)}</div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -185,7 +187,7 @@ export default function RecipeTable({ open, onClose }: RecipeTableProps) {
             )}
           </div>
 
-          <div className="min-h-0 overflow-auto px-5 py-4">
+          <div className="min-h-0 overflow-auto px-4 py-4 sm:px-5">
             <h3 className="text-sm font-semibold text-gray-800">反向查询</h3>
 
             {!selectedElement || !relatedRecipes ? (

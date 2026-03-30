@@ -13,7 +13,7 @@ export default function ToastViewport({ toasts, onDismiss }: ToastViewportProps)
   if (toasts.length === 0) return null
 
   return (
-    <div className="pointer-events-none fixed right-4 top-4 z-[70] flex w-[min(24rem,calc(100vw-2rem))] flex-col gap-2">
+    <div className="pointer-events-none fixed left-3 right-3 top-3 z-[70] flex flex-col gap-2 sm:left-auto sm:right-4 sm:top-4 sm:w-[min(24rem,calc(100vw-2rem))]">
       {toasts.map(toast => (
         <div
           key={toast.id}

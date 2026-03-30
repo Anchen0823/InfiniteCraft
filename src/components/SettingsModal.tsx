@@ -115,9 +115,9 @@ export default function SettingsModal({ open, onClose, onNotify }: SettingsModal
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="w-full max-w-2xl rounded-2xl bg-white shadow-xl border border-gray-200">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:px-4">
+      <div className="flex h-full w-full max-w-2xl flex-col rounded-2xl border border-gray-200 bg-white shadow-xl sm:h-auto sm:max-h-[calc(100dvh-2rem)]">
+        <div className="flex flex-col gap-3 border-b border-gray-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
           <div>
             <h2 className="text-lg font-semibold text-gray-800">AI 设置</h2>
             <p className="text-sm text-gray-500 mt-1">前端只保存模型配置，API Key 由服务器环境变量提供。</p>
@@ -131,7 +131,7 @@ export default function SettingsModal({ open, onClose, onNotify }: SettingsModal
           </button>
         </div>
 
-        <div className="px-5 py-4 space-y-6 max-h-[70vh] overflow-auto">
+        <div className="min-h-0 flex-1 overflow-auto px-4 py-4 space-y-6 sm:px-5">
           <div className={`rounded-xl border px-3 py-2 text-sm ${
             hasApiKey
               ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
@@ -224,7 +224,7 @@ export default function SettingsModal({ open, onClose, onNotify }: SettingsModal
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 px-5 py-4 border-t border-gray-100">
+        <div className="flex flex-col-reverse gap-2 border-t border-gray-100 px-4 py-4 sm:flex-row sm:justify-end sm:px-5">
           <button
             type="button"
             onClick={onClose}

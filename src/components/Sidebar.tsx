@@ -15,10 +15,16 @@ interface SidebarDrag {
 }
 
 interface SidebarProps {
+  mode?: 'desktop' | 'mobile'
   onDropToWorkspace?: (elementId: string, screenX: number, screenY: number) => void
+  onRequestClose?: () => void
 }
 
-export default function Sidebar({ onDropToWorkspace }: SidebarProps) {
+export default function Sidebar({
+  mode = 'desktop',
+  onDropToWorkspace,
+  onRequestClose,
+}: SidebarProps) {
   const elements = useElementStore(s => s.elements)
   const allElements = useMemo(() => Object.values(elements), [elements])
   const [collapsed, setCollapsed] = useState(false)
@@ -26,6 +32,7 @@ export default function Sidebar({ onDropToWorkspace }: SidebarProps) {
   const [sortMode, setSortMode] = useState<SortMode>('time')
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [sidebarDrag, setSidebarDrag] = useState<SidebarDrag | null>(null)
+  const isMobile = mode === 'mobile'
 
   const allCategories = useMemo(() => {
     const cats = new Set<string>()
@@ -67,15 +74,18 @@ export default function Sidebar({ onDropToWorkspace }: SidebarProps) {
       const onUp = (ue: PointerEvent) => {
         setSidebarDrag(null)
         onDropToWorkspace?.(el.id, ue.clientX, ue.clientY)
+        if (isMobile) {
+          onRequestClose?.()
+        }
         window.removeEventListener('pointerup', onUp)
       }
 
       window.addEventListener('pointerup', onUp)
     },
-    [onDropToWorkspace],
+    [isMobile, onDropToWorkspace, onRequestClose],
   )
 
-  if (collapsed) {
+  if (!isMobile && collapsed) {
     return (
       <div className="h-full w-full bg-white border-r border-gray-200 md:w-10 flex flex-col items-center pt-4">
         <button
@@ -91,17 +101,31 @@ export default function Sidebar({ onDropToWorkspace }: SidebarProps) {
 
   return (
     <>
-      <div className="h-full w-full bg-white border-r border-gray-200 md:w-64 flex flex-col">
+      <div className={`h-full w-full bg-white flex flex-col ${isMobile ? '' : 'border-r border-gray-200 md:w-64'}`}>
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-          <h2 className="text-sm font-bold text-gray-700">元素库</h2>
-          <button
-            onClick={() => setCollapsed(true)}
-            className="p-1 rounded hover:bg-gray-100 text-gray-400 transition-colors"
-            title="收起"
-          >
-            <ChevronLeft />
-          </button>
+        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+          <div>
+            <h2 className="text-sm font-bold text-gray-700">元素库</h2>
+            {isMobile && <p className="mt-1 text-xs text-gray-400">长按或拖拽元素到工作台开始合成</p>}
+          </div>
+
+          {isMobile ? (
+            <button
+              onClick={onRequestClose}
+              className="rounded-lg px-2 py-1 text-sm text-gray-500 transition-colors hover:bg-gray-100"
+              title="关闭元素库"
+            >
+              关闭
+            </button>
+          ) : (
+            <button
+              onClick={() => setCollapsed(true)}
+              className="p-1 rounded hover:bg-gray-100 text-gray-400 transition-colors"
+              title="收起"
+            >
+              <ChevronLeft />
+            </button>
+          )}
         </div>
 
         {/* Search */}
@@ -128,7 +152,7 @@ export default function Sidebar({ onDropToWorkspace }: SidebarProps) {
         </div>
 
         {/* Category filter */}
-        <div className="px-3 py-1.5 flex flex-wrap gap-1">
+        <div className="px-3 py-1.5 flex flex-wrap gap-1 overflow-y-auto">
           <CategoryTag
             active={activeCategory === null}
             onClick={() => setActiveCategory(null)}

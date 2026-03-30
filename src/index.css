@@ -6,8 +6,12 @@ body {
     'Noto Sans SC', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+  background: #f9fafb;
 }
 
+html,
+body,
 #root {
-  min-height: 100vh;
+  height: 100%;
 }

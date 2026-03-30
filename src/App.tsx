@@ -21,6 +21,7 @@ function App() {
   const [isReady, setIsReady] = useState(false)
   const [bootstrapError, setBootstrapError] = useState<string | null>(null)
   const [activePanel, setActivePanel] = useState<'encyclopedia' | 'recipes' | 'craftTree' | 'settings' | null>(null)
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [toasts, setToasts] = useState<ToastItem[]>([])
   const hasApiKey = useSettingsStore(s => s.hasApiKey)
 
@@ -129,6 +130,22 @@ function App() {
   }, [activePanel])
 
   useEffect(() => {
+    if (!mobileSidebarOpen) return
+
+    const mediaQuery = window.matchMedia('(min-width: 768px)')
+    const handleChange = (event: MediaQueryListEvent) => {
+      if (event.matches) {
+        setMobileSidebarOpen(false)
+      }
+    }
+
+    mediaQuery.addEventListener('change', handleChange)
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange)
+    }
+  }, [mobileSidebarOpen])
+
+  useEffect(() => {
     if (!isReady) return
 
     let timeoutId: number | undefined
@@ -171,7 +188,7 @@ function App() {
 
   if (!isReady) {
     return (
-      <div className="h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex h-dvh bg-gray-50 items-center justify-center p-4">
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 w-full max-w-md">
           <h1 className="text-lg font-bold text-gray-800">无尽炼金</h1>
           <p className="mt-2 text-sm text-gray-500">
@@ -192,25 +209,42 @@ function App() {
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-gray-50">
+    <div className="h-dvh overflow-hidden bg-gray-50">
       <div className="flex h-full flex-col md:flex-row">
-        <div className="order-last h-72 border-t border-gray-200 md:order-first md:h-full md:border-t-0">
+        <div className="hidden border-r border-gray-200 md:block md:h-full">
           <Sidebar onDropToWorkspace={handleDropToWorkspace} />
         </div>
 
         <div className="min-h-0 flex-1 flex flex-col min-w-0">
-        <Toolbar
-          hasApiKey={hasApiKey}
-          onOpenEncyclopedia={() => setActivePanel('encyclopedia')}
-          onOpenRecipes={() => setActivePanel('recipes')}
-          onOpenCraftTree={() => setActivePanel('craftTree')}
-          onOpenSettings={() => setActivePanel('settings')}
-        />
+          <Toolbar
+            hasApiKey={hasApiKey}
+            onOpenEncyclopedia={() => setActivePanel('encyclopedia')}
+            onOpenRecipes={() => setActivePanel('recipes')}
+            onOpenCraftTree={() => setActivePanel('craftTree')}
+            onOpenSettings={() => setActivePanel('settings')}
+            onToggleSidebar={() => setMobileSidebarOpen(open => !open)}
+            mobileSidebarOpen={mobileSidebarOpen}
+          />
 
-        <Workspace ref={workspaceRef} />
-        <StatusBar />
+          <Workspace ref={workspaceRef} />
+          <StatusBar />
         </div>
       </div>
+
+      {mobileSidebarOpen && (
+        <div className="fixed inset-0 z-30 bg-black/35 md:hidden" onClick={() => setMobileSidebarOpen(false)}>
+          <div
+            className="absolute inset-x-0 bottom-0 h-[min(75vh,36rem)] rounded-t-3xl border border-b-0 border-gray-200 bg-white shadow-2xl"
+            onClick={event => event.stopPropagation()}
+          >
+            <Sidebar
+              mode="mobile"
+              onDropToWorkspace={handleDropToWorkspace}
+              onRequestClose={() => setMobileSidebarOpen(false)}
+            />
+          </div>
+        </div>
+      )}
 
       <Encyclopedia open={activePanel === 'encyclopedia'} onClose={() => setActivePanel(null)} />
       <RecipeTable open={activePanel === 'recipes'} onClose={() => setActivePanel(null)} />

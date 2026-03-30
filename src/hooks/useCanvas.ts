@@ -6,6 +6,37 @@ export function useCanvas(containerRef: React.RefObject<HTMLDivElement | null>) 
   const isPanning = useRef(false)
   const lastPointer = useRef({ x: 0, y: 0 })
   const spacePressed = useRef(false)
+  const activeTouches = useRef(new Map<number, { x: number; y: number }>())
+  const scaleRef = useRef(scale)
+  const panRef = useRef({ x: panX, y: panY })
+  const gestureRef = useRef<{
+    startDistance: number
+    startScale: number
+    startPanX: number
+    startPanY: number
+    startCenterX: number
+    startCenterY: number
+  } | null>(null)
+
+  useEffect(() => {
+    scaleRef.current = scale
+  }, [scale])
+
+  useEffect(() => {
+    panRef.current = { x: panX, y: panY }
+  }, [panX, panY])
+
+  const getTouchStats = useCallback(() => {
+    const touches = Array.from(activeTouches.current.values())
+    if (touches.length < 2) return null
+
+    const [first, second] = touches
+    const centerX = (first.x + second.x) / 2
+    const centerY = (first.y + second.y) / 2
+    const distance = Math.hypot(second.x - first.x, second.y - first.y)
+
+    return { centerX, centerY, distance }
+  }, [])
 
   const handleWheel = useCallback(
     (e: WheelEvent) => {
@@ -17,20 +48,41 @@ export function useCanvas(containerRef: React.RefObject<HTMLDivElement | null>) 
       const mouseX = e.clientX - rect.left
       const mouseY = e.clientY - rect.top
 
+      const currentScale = scaleRef.current
+      const currentPan = panRef.current
       const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1
-      const newScale = Math.min(2, Math.max(0.25, scale * zoomFactor))
+      const newScale = Math.min(2, Math.max(0.25, currentScale * zoomFactor))
 
-      const newPanX = mouseX - ((mouseX - panX) / scale) * newScale
-      const newPanY = mouseY - ((mouseY - panY) / scale) * newScale
+      const newPanX = mouseX - ((mouseX - currentPan.x) / currentScale) * newScale
+      const newPanY = mouseY - ((mouseY - currentPan.y) / currentScale) * newScale
 
+      scaleRef.current = newScale
+      panRef.current = { x: newPanX, y: newPanY }
       setScale(newScale)
       setPan(newPanX, newPanY)
     },
-    [scale, panX, panY, setScale, setPan, containerRef],
+    [setScale, setPan, containerRef],
   )
 
   const handlePointerDown = useCallback(
     (e: PointerEvent) => {
+      if (e.pointerType === 'touch') {
+        activeTouches.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+        const stats = getTouchStats()
+
+        if (stats) {
+          gestureRef.current = {
+            startDistance: stats.distance,
+            startScale: scaleRef.current,
+            startPanX: panRef.current.x,
+            startPanY: panRef.current.y,
+            startCenterX: stats.centerX,
+            startCenterY: stats.centerY,
+          }
+        }
+        return
+      }
+
       if (e.button === 1 || (e.button === 0 && spacePressed.current)) {
         isPanning.current = true
         lastPointer.current = { x: e.clientX, y: e.clientY }
@@ -39,21 +91,57 @@ export function useCanvas(containerRef: React.RefObject<HTMLDivElement | null>) 
         e.preventDefault()
       }
     },
-    [containerRef],
+    [containerRef, getTouchStats],
   )
 
   const handlePointerMove = useCallback(
     (e: PointerEvent) => {
+      if (e.pointerType === 'touch' && activeTouches.current.has(e.pointerId)) {
+        activeTouches.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+        const stats = getTouchStats()
+
+        if (stats && gestureRef.current) {
+          const nextScale = Math.min(
+            2,
+            Math.max(0.25, gestureRef.current.startScale * (stats.distance / gestureRef.current.startDistance)),
+          )
+
+          const nextPanX = gestureRef.current.startPanX + (stats.centerX - gestureRef.current.startCenterX)
+          const nextPanY = gestureRef.current.startPanY + (stats.centerY - gestureRef.current.startCenterY)
+          const adjustedPanX =
+            stats.centerX - ((stats.centerX - nextPanX) / gestureRef.current.startScale) * nextScale
+          const adjustedPanY =
+            stats.centerY - ((stats.centerY - nextPanY) / gestureRef.current.startScale) * nextScale
+
+          scaleRef.current = nextScale
+          panRef.current = { x: adjustedPanX, y: adjustedPanY }
+          setScale(nextScale)
+          setPan(adjustedPanX, adjustedPanY)
+          e.preventDefault()
+        }
+        return
+      }
+
       if (!isPanning.current) return
       const dx = e.clientX - lastPointer.current.x
       const dy = e.clientY - lastPointer.current.y
       lastPointer.current = { x: e.clientX, y: e.clientY }
-      setPan(panX + dx, panY + dy)
+      const nextPanX = panRef.current.x + dx
+      const nextPanY = panRef.current.y + dy
+      panRef.current = { x: nextPanX, y: nextPanY }
+      setPan(nextPanX, nextPanY)
     },
-    [panX, panY, setPan],
+    [getTouchStats, setPan, setScale],
   )
 
-  const handlePointerUp = useCallback(() => {
+  const handlePointerUp = useCallback((e: PointerEvent) => {
+    if (e.pointerType === 'touch') {
+      activeTouches.current.delete(e.pointerId)
+      if (activeTouches.current.size < 2) {
+        gestureRef.current = null
+      }
+    }
+
     if (isPanning.current) {
       isPanning.current = false
       const container = containerRef.current
@@ -92,6 +180,7 @@ export function useCanvas(containerRef: React.RefObject<HTMLDivElement | null>) 
     container.addEventListener('pointerdown', handlePointerDown)
     window.addEventListener('pointermove', handlePointerMove)
     window.addEventListener('pointerup', handlePointerUp)
+    window.addEventListener('pointercancel', handlePointerUp)
     window.addEventListener('keydown', handleKeyDown)
     window.addEventListener('keyup', handleKeyUp)
 
@@ -100,6 +189,7 @@ export function useCanvas(containerRef: React.RefObject<HTMLDivElement | null>) 
       container.removeEventListener('pointerdown', handlePointerDown)
       window.removeEventListener('pointermove', handlePointerMove)
       window.removeEventListener('pointerup', handlePointerUp)
+      window.removeEventListener('pointercancel', handlePointerUp)
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
     }

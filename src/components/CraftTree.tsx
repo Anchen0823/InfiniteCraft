@@ -37,9 +37,9 @@ export default function CraftTree({ open, onClose }: CraftTreeProps) {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-40 bg-black/40 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-40 bg-black/40 p-2 sm:p-4" onClick={onClose}>
       <div
-        className="mx-auto flex h-full max-w-7xl flex-col rounded-2xl border border-gray-200 bg-white shadow-xl"
+        className="mx-auto flex h-full w-full max-w-7xl flex-col rounded-2xl border border-gray-200 bg-white shadow-xl"
         onClick={event => event.stopPropagation()}
       >
         <ReactFlowProvider>
@@ -146,7 +146,7 @@ function CraftTreeContent({ onClose }: { onClose: () => void }) {
 
   return (
     <>
-      <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+      <div className="flex flex-col gap-3 border-b border-gray-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <div>
           <h2 className="text-lg font-semibold text-gray-800">合成树</h2>
           <p className="mt-1 text-sm text-gray-500">查看元素之间的合成关系，并搜索定位到指定节点。</p>
@@ -161,13 +161,13 @@ function CraftTreeContent({ onClose }: { onClose: () => void }) {
         </button>
       </div>
 
-      <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-4">
+      <div className="flex flex-col gap-3 border-b border-gray-100 px-4 py-4 sm:flex-row sm:items-center sm:px-5">
         <input
           type="text"
           value={search}
           onChange={event => setSearch(event.target.value)}
           placeholder="搜索元素名称..."
-          className="w-full max-w-sm rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none"
+          className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none sm:max-w-sm"
         />
         <button
           type="button"

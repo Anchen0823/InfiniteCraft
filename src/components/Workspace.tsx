@@ -194,7 +194,7 @@ const Workspace = forwardRef<WorkspaceHandle>(function Workspace(_, ref) {
   return (
     <div
       ref={containerRef}
-      className="flex-1 relative overflow-hidden outline-none"
+      className="relative flex-1 overflow-hidden outline-none touch-none"
       style={{
         backgroundImage: `radial-gradient(circle, #d1d5db 1px, transparent 1px)`,
         backgroundSize: `${gridSize}px ${gridSize}px`,
@@ -206,14 +206,17 @@ const Workspace = forwardRef<WorkspaceHandle>(function Workspace(_, ref) {
       onKeyDown={handleKeyDown}
     >
       {/* Zoom indicator */}
-      <div className="absolute bottom-3 right-3 px-2 py-1 bg-white/80 rounded text-xs text-gray-500 border border-gray-200 select-none pointer-events-none">
+      <div className="absolute bottom-3 right-3 rounded border border-gray-200 bg-white/85 px-2 py-1 text-xs text-gray-500 select-none pointer-events-none">
         {Math.round(scale * 100)}%
       </div>
 
       {/* Empty state hint */}
       {items.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <p className="text-gray-400 text-sm">从左侧元素库拖入元素开始合成吧！</p>
+          <div className="max-w-xs rounded-2xl bg-white/80 px-4 py-3 text-center shadow-sm backdrop-blur sm:max-w-sm">
+            <p className="text-sm text-gray-500">从元素库拖入元素开始合成吧</p>
+            <p className="mt-1 text-xs text-gray-400 md:hidden">支持双指缩放与双指平移工作台</p>
+          </div>
         </div>
       )}
 
@@ -233,6 +236,10 @@ const Workspace = forwardRef<WorkspaceHandle>(function Workspace(_, ref) {
           {notice.message}
         </div>
       )}
+
+      <div className="pointer-events-none absolute left-3 top-3 rounded-2xl bg-white/80 px-3 py-2 text-xs text-gray-500 shadow-sm backdrop-blur md:hidden">
+        单指拖元素，双指缩放/平移
+      </div>
 
       {/* Canvas layer */}
       <div
