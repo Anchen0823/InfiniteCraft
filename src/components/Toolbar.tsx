@@ -1,59 +1,96 @@
+import { useEffect, useRef, useState } from 'react'
+
 interface ToolbarProps {
-  hasApiKey: boolean
   onOpenEncyclopedia: () => void
   onOpenRecipes: () => void
   onOpenCraftTree: () => void
   onOpenSettings: () => void
-  onToggleSidebar: () => void
-  mobileSidebarOpen: boolean
 }
 
 export default function Toolbar({
-  hasApiKey,
   onOpenEncyclopedia,
   onOpenRecipes,
   onOpenCraftTree,
   onOpenSettings,
-  onToggleSidebar,
-  mobileSidebarOpen,
 }: ToolbarProps) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (menuRef.current?.contains(event.target as Node)) return
+      setMobileMenuOpen(false)
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMobileMenuOpen(false)
+      }
+    }
+
+    window.addEventListener('pointerdown', handlePointerDown)
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown)
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [mobileMenuOpen])
+
+  const mobileActions = [
+    { label: '图鉴', onClick: onOpenEncyclopedia },
+    { label: '配方表', onClick: onOpenRecipes },
+    { label: '合成树', onClick: onOpenCraftTree },
+    { label: '设置', onClick: onOpenSettings },
+  ]
+
   return (
     <div className="shrink-0 border-b border-gray-200 bg-white">
-      <div className="flex flex-wrap items-center gap-2 px-3 py-3 sm:px-4">
-        <button
-          type="button"
-          onClick={onToggleSidebar}
-          className="inline-flex items-center rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 md:hidden"
-        >
-          {mobileSidebarOpen ? '收起元素库' : '元素库'}
-        </button>
-
-        <span className="min-w-0 text-base font-bold text-gray-800 sm:text-lg">🧪 无尽炼金</span>
-
-        <span className={`ml-auto hidden rounded-full border px-2.5 py-1 text-xs sm:inline-flex ${
-          hasApiKey
-            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-            : 'bg-amber-50 text-amber-700 border-amber-200'
-        }`}>
-          {hasApiKey ? 'AI 已就绪' : 'AI Key 未配置'}
-        </span>
+      <div className="hidden items-center gap-3 px-4 py-3 md:flex">
+        <span className="min-w-0 text-lg font-bold text-gray-800">🧪 无尽炼金</span>
+        <div className="ml-auto flex gap-2 overflow-x-auto">
+          <ToolbarButton label="图鉴" onClick={onOpenEncyclopedia} />
+          <ToolbarButton label="配方表" onClick={onOpenRecipes} />
+          <ToolbarButton label="合成树" onClick={onOpenCraftTree} />
+          <ToolbarButton label="设置" onClick={onOpenSettings} />
+        </div>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto px-3 pb-3 sm:px-4">
-        <ToolbarButton label="图鉴" onClick={onOpenEncyclopedia} />
-        <ToolbarButton label="配方表" onClick={onOpenRecipes} />
-        <ToolbarButton label="合成树" onClick={onOpenCraftTree} />
-        <ToolbarButton label="设置" onClick={onOpenSettings} />
-      </div>
+      <div className="relative px-4 py-4 md:hidden" ref={menuRef}>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="text-xl font-bold text-gray-800">无尽炼金</div>
+            <div className="mt-1 text-xs text-gray-400">移动端工作台</div>
+          </div>
 
-      <div className="px-3 pb-3 sm:hidden">
-        <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs ${
-          hasApiKey
-            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-            : 'bg-amber-50 text-amber-700 border-amber-200'
-        }`}>
-          {hasApiKey ? 'AI 已就绪' : 'AI Key 未配置'}
-        </span>
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(open => !open)}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-gray-200 text-gray-700 transition-colors hover:bg-gray-50"
+            title="打开功能菜单"
+          >
+            <MenuIcon />
+          </button>
+        </div>
+
+        {mobileMenuOpen && (
+          <div className="absolute right-4 top-[calc(100%-0.25rem)] z-20 flex w-44 flex-col gap-1 rounded-2xl border border-gray-200 bg-white p-2 shadow-xl">
+            {mobileActions.map(action => (
+              <button
+                key={action.label}
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false)
+                  action.onClick()
+                }}
+                className="rounded-xl px-3 py-2.5 text-left text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+              >
+                {action.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -75,5 +112,15 @@ function ToolbarButton({
     >
       {label}
     </button>
+  )
+}
+
+function MenuIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <path d="M4 7h16" />
+      <path d="M4 12h16" />
+      <path d="M4 17h10" />
+    </svg>
   )
 }

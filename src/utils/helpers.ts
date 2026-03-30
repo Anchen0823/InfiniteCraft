@@ -152,6 +152,8 @@ export function buildTreeData(
     return {
       id: element.id,
       type: 'default',
+      width: NODE_WIDTH,
+      height: NODE_HEIGHT,
       position: { x: 0, y: 0 },
       sourcePosition: Position.Bottom,
       targetPosition: Position.Top,

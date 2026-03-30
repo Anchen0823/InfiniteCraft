@@ -24,6 +24,20 @@ type CraftTreeDisplayData = CraftTreeNodeData & {
   isSelected: boolean
 }
 
+function getMiniMapNodeColor(node: Node<CraftTreeDisplayData>) {
+  if (node.data.isSelected) return '#2563eb'
+  if (node.data.isHighlighted) return '#f59e0b'
+  if (node.data.isBase) return '#dbeafe'
+  return '#e5e7eb'
+}
+
+function getMiniMapNodeStroke(node: Node<CraftTreeDisplayData>) {
+  if (node.data.isSelected) return '#1d4ed8'
+  if (node.data.isHighlighted) return '#d97706'
+  if (node.data.isBase) return '#60a5fa'
+  return '#94a3b8'
+}
+
 interface CraftTreeProps {
   open: boolean
   onClose: () => void
@@ -199,7 +213,16 @@ function CraftTreeContent({ onClose }: { onClose: () => void }) {
             proOptions={{ hideAttribution: true }}
           >
             <Background gap={20} size={1} />
-            <MiniMap zoomable pannable />
+            <MiniMap
+              zoomable
+              pannable
+              bgColor="#f8fafc"
+              maskColor="rgb(148 163 184 / 0.18)"
+              nodeColor={getMiniMapNodeColor}
+              nodeStrokeColor={getMiniMapNodeStroke}
+              nodeBorderRadius={10}
+              className="!border !border-gray-200 !bg-slate-50 !shadow-sm"
+            />
             <Controls showInteractive={false} />
           </ReactFlow>
         )}

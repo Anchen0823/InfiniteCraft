@@ -31,7 +31,7 @@ export default function ElementCard({
         bg-white rounded-xl border border-gray-200
         shadow-sm hover:shadow-md
         cursor-grab active:cursor-grabbing
-        select-none transition-shadow
+        select-none touch-none transition-shadow
         ${className}
       `}
       whileHover={{ scale: 1.05 }}

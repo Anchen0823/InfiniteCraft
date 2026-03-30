@@ -194,7 +194,7 @@ const Workspace = forwardRef<WorkspaceHandle>(function Workspace(_, ref) {
   return (
     <div
       ref={containerRef}
-      className="relative flex-1 overflow-hidden outline-none touch-none"
+      className="relative flex-1 overflow-hidden outline-none touch-none select-none"
       style={{
         backgroundImage: `radial-gradient(circle, #d1d5db 1px, transparent 1px)`,
         backgroundSize: `${gridSize}px ${gridSize}px`,
