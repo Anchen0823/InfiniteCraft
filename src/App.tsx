@@ -21,9 +21,7 @@ function App() {
   const [isReady, setIsReady] = useState(false)
   const [bootstrapError, setBootstrapError] = useState<string | null>(null)
   const [activePanel, setActivePanel] = useState<'encyclopedia' | 'recipes' | 'craftTree' | 'settings' | null>(null)
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [toasts, setToasts] = useState<ToastItem[]>([])
-  const hasApiKey = useSettingsStore(s => s.hasApiKey)
 
   const dismissToast = useCallback((id: string) => {
     setToasts(current => current.filter(toast => toast.id !== id))
@@ -130,34 +128,20 @@ function App() {
   }, [activePanel])
 
   useEffect(() => {
-    if (!mobileSidebarOpen) return
-
-    const mediaQuery = window.matchMedia('(min-width: 768px)')
-    const handleChange = (event: MediaQueryListEvent) => {
-      if (event.matches) {
-        setMobileSidebarOpen(false)
-      }
-    }
-
-    mediaQuery.addEventListener('change', handleChange)
-    return () => {
-      mediaQuery.removeEventListener('change', handleChange)
-    }
-  }, [mobileSidebarOpen])
-
-  useEffect(() => {
     if (!isReady) return
 
     let timeoutId: number | undefined
     let previousSnapshot = JSON.stringify({
       aiConfig: useSettingsStore.getState().aiConfig,
       craftCount: useSettingsStore.getState().craftCount,
+      audioEnabled: useSettingsStore.getState().audioEnabled,
     })
 
     const unsubscribe = useSettingsStore.subscribe(state => {
       const nextSettings = {
         aiConfig: state.aiConfig,
         craftCount: state.craftCount,
+        audioEnabled: state.audioEnabled,
       }
       const nextSnapshot = JSON.stringify(nextSettings)
 
@@ -217,34 +201,24 @@ function App() {
 
         <div className="min-h-0 flex-1 flex flex-col min-w-0">
           <Toolbar
-            hasApiKey={hasApiKey}
             onOpenEncyclopedia={() => setActivePanel('encyclopedia')}
             onOpenRecipes={() => setActivePanel('recipes')}
             onOpenCraftTree={() => setActivePanel('craftTree')}
             onOpenSettings={() => setActivePanel('settings')}
-            onToggleSidebar={() => setMobileSidebarOpen(open => !open)}
-            mobileSidebarOpen={mobileSidebarOpen}
           />
 
-          <Workspace ref={workspaceRef} />
-          <StatusBar />
-        </div>
-      </div>
+          <div className="min-h-0 flex flex-1 flex-col">
+            <Workspace ref={workspaceRef} />
+            <div className="hidden md:block">
+              <StatusBar />
+            </div>
+          </div>
 
-      {mobileSidebarOpen && (
-        <div className="fixed inset-0 z-30 bg-black/35 md:hidden" onClick={() => setMobileSidebarOpen(false)}>
-          <div
-            className="absolute inset-x-0 bottom-0 h-[min(75vh,36rem)] rounded-t-3xl border border-b-0 border-gray-200 bg-white shadow-2xl"
-            onClick={event => event.stopPropagation()}
-          >
-            <Sidebar
-              mode="mobile"
-              onDropToWorkspace={handleDropToWorkspace}
-              onRequestClose={() => setMobileSidebarOpen(false)}
-            />
+          <div className="min-h-[18rem] h-[min(38dvh,24rem)] border-t border-gray-200 bg-white md:hidden">
+            <Sidebar mode="mobile" onDropToWorkspace={handleDropToWorkspace} />
           </div>
         </div>
-      )}
+      </div>
 
       <Encyclopedia open={activePanel === 'encyclopedia'} onClose={() => setActivePanel(null)} />
       <RecipeTable open={activePanel === 'recipes'} onClose={() => setActivePanel(null)} />

@@ -10,14 +10,14 @@
 | ------------ | ----------------------------------- | ----------------------------------------- |
 | 前端框架     | React 18 + TypeScript               | 组件化开发，类型安全                      |
 | 后端服务     | Node.js + Express                   | 轻量，适合单用户自托管                    |
-| 构建工具     | Vite 5                              | 快速 HMR，前端构建简单                    |
-| 样式         | Tailwind CSS 3                      | 原子化 CSS，快速开发                      |
+| 构建工具     | Vite 6                              | 快速 HMR，前端构建简单                    |
+| 样式         | Tailwind CSS 4                      | 原子化 CSS，快速开发                      |
 | 状态管理     | Zustand                             | 管理前端内存态，与后端接口同步            |
 | 拖拽         | 原生 Pointer Events                 | 自由画布场景下原生实现更灵活              |
 | 动画         | Framer Motion                       | 声明式动画，React 生态首选                |
 | AI 调用      | 服务端 `fetch` 代理（OpenAI 兼容） | 避免浏览器暴露 API Key                    |
 | 数据持久化   | SQLite                              | 单机部署简单，适合单用户，备份恢复方便    |
-| 合成树可视化 | reactflow 或 D3.js                  | 节点连线图可视化                          |
+| 合成树可视化 | React Flow + dagre                  | 节点连线图可视化与自动布局                |
 | 进程管理     | PM2 / systemd                       | 服务器常驻运行                            |
 | 包管理       | pnpm                                | 快速、节省磁盘空间                        |
 
@@ -30,7 +30,6 @@ infinite-craft/
 ├── public/
 │   └── favicon.svg
 ├── src/
-│   ├── assets/                    # 静态资源（图片、图标等）
 │   ├── components/                # UI 组件
 │   │   ├── ElementCard.tsx        # 元素卡片
 │   │   ├── Sidebar.tsx            # 左侧元素库面板
@@ -44,7 +43,6 @@ infinite-craft/
 │   │   ├── RecipeTable.tsx        # 配方表
 │   │   └── CraftTree.tsx          # 合成树可视化
 │   ├── hooks/                     # 自定义 Hooks
-│   │   ├── useDragElement.ts      # 元素拖拽逻辑
 │   │   ├── useCanvas.ts           # 画布缩放 & 平移
 │   │   └── useCraft.ts            # 合成流程 Hook
 │   ├── services/                  # 服务层
@@ -54,12 +52,13 @@ infinite-craft/
 │   │   ├── elementStore.ts        # 元素库状态
 │   │   ├── recipeStore.ts         # 配方缓存状态
 │   │   ├── workspaceStore.ts      # 工作台状态
-│   │   └── settingsStore.ts       # 设置状态（模型、超时等）
+│   │   └── settingsStore.ts       # 设置状态（模型、超时、音效等）
 │   ├── types/                     # TypeScript 类型定义
 │   │   └── index.ts               # Element, Recipe 等类型
 │   ├── utils/                     # 工具函数
 │   │   ├── constants.ts           # 常量（基础元素、类别池等）
-│   │   └── helpers.ts             # 辅助函数（碰撞检测等）
+│   │   ├── helpers.ts             # 辅助函数（碰撞检测等）
+│   │   └── sound.ts               # Web Audio 交互音效
 │   ├── App.tsx                    # 根组件 & 布局
 │   ├── main.tsx                   # 入口
 │   └── index.css                  # 全局样式 / Tailwind 入口
@@ -181,9 +180,9 @@ infinite-craft/
   - 工作台变更节流后同步到 `/api/state/workspace`
 
 - [x] **设置 Store** `src/store/settingsStore.ts`
-  - 状态：`aiConfig: AIConfig`、`craftCount: number`
-  - 操作：`hydrate()`、`updateConfig()`、`incrementCraftCount()`
-  - 常规配置保存到数据库，`OPENAI_API_KEY` 仅保存在服务器环境变量
+  - 状态：`aiConfig: AIConfig`、`craftCount: number`、`audioEnabled: boolean`、`hasApiKey: boolean`
+  - 操作：`replaceAll()`、`updateConfig()`、`setAudioEnabled()`、`incrementCraftCount()`
+  - 常规配置和音效开关保存到数据库，`OPENAI_API_KEY` 仅保存在服务器环境变量
 
 ### 关键技术要点
 
@@ -255,9 +254,10 @@ CREATE TABLE IF NOT EXISTS app_settings (
   - 顶部：搜索输入框
   - 中部：元素列表（网格或列表布局）
   - 底部：已发现元素计数
-  - 支持按类别分组显示（可折叠的分类手风琴）
+  - 支持按类别标签筛选
   - 支持按发现时间 / 名称排序切换
   - 面板可折叠（收起/展开按钮）
+  - 移动端以底部面板展示，筛选区压缩为紧凑展开样式
 
 - [x] **搜索与筛选逻辑**
   - 按名称模糊搜索
@@ -457,19 +457,15 @@ src/utils/helpers.ts             — 新增碰撞检测函数
   - 校验 `name`（非空字符串）、`emoji`（单个 emoji）、`categories`（非空数组）
   - 校验失败时重试
 
-- [ ] **设置界面** `src/components/SettingsModal.tsx` *(Phase 9 打磨阶段实现)*
+- [x] **设置界面** `src/components/SettingsModal.tsx`
   - 表单字段：API Base URL、模型名称、超时时间
-  - 预设几组常见配置（下拉选择）：
-    - DeepSeek: `https://api.deepseek.com` / `deepseek-chat`
-    - 通义千问: `https://dashscope.aliyuncs.com/compatible-mode` / `qwen-plus`
-    - OpenAI: `https://api.openai.com` / `gpt-4o-mini`
-    - 自定义
-  - "测试连接" 按钮：发送一个简单请求验证配置是否有效
   - 保存到 settingsStore，并同步到服务端数据库
   - API Key 通过服务器环境变量配置，不在前端展示
+  - 提供音效开关、导入/导出/重置数据入口
+  - 提供作者 GitHub 主页跳转入口
 
 - [x] **设置 Store** `src/store/settingsStore.ts`
-  - 完善 AIConfig 的默认值、加载和更新逻辑
+  - 完善 AIConfig、音效开关和服务端同步逻辑
 
 ### 关键技术要点
 
@@ -506,7 +502,7 @@ server/config/env.ts                — 新建
 
 - 配置服务端环境变量和模型参数后，手动调用 `craftElements("水", "火")` 能返回合成结果
 - 错误时能自动重试，超时能正确中断
-- 设置页面可保存和读取配置，"测试连接"可验证配置有效性
+- 设置页面可保存和读取配置，音效开关与数据管理入口可正常工作
 
 ---
 
@@ -554,6 +550,11 @@ server/config/env.ts                — 新建
 - [x] **新元素入库通知**
   - 新元素添加到侧边栏时，侧边栏内该元素短暂高亮
   - 或显示 Toast："发现新元素: ♨️ 蒸汽"
+
+- [x] **合成交互音效** `src/utils/sound.ts`
+  - 普通合成成功播放轻提示音
+  - 首次发现新元素播放更明显的奖励音
+  - 受设置中的 `audioEnabled` 开关控制
 
 ### 涉及文件
 
@@ -704,8 +705,8 @@ src/utils/helpers.ts             — 新增 buildTreeData
 
 - [x] **响应式布局**
   - 桌面端：左侧侧边栏 + 右侧工作台
-  - 小屏幕：侧边栏切换为底部抽屉
-  - 极端小屏提示"请在桌面端使用以获得最佳体验"
+  - 小屏幕：元素库常驻为底部面板，减少切换成本
+  - 移动端元素面板已压缩筛选区并移除冗余头部占位
 
 #### 错误处理
 
@@ -754,14 +755,13 @@ src/utils/helpers.ts             — 新增 buildTreeData
   - 使用 Nginx 反向代理前后端，并用 PM2 或 systemd 保持常驻
   - 确保数据库文件目录可写，并配置定期备份
 
-- [ ] **README.md**
+- [x] **README.md**
   - 项目介绍
-  - 服务器访问地址
   - 本地开发指南
   - 服务端部署指南
   - 技术栈说明
   - 环境变量说明
-  - 截图/GIF 演示
+  - 当前功能与状态说明
 
 ### 涉及文件
 

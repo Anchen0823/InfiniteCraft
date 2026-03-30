@@ -6,10 +6,12 @@ interface SettingsState {
   aiConfig: AIConfig
   craftCount: number
   hasApiKey: boolean
+  audioEnabled: boolean
   replaceAll: (settings: SettingsPayload) => void
   updateConfig: (config: Partial<AIConfig>) => void
   setCraftCount: (craftCount: number) => void
   setHasApiKey: (hasApiKey: boolean) => void
+  setAudioEnabled: (audioEnabled: boolean) => void
   incrementCraftCount: () => void
 }
 
@@ -18,12 +20,14 @@ export const useSettingsStore = create<SettingsState>()(
     aiConfig: { ...DEFAULT_AI_CONFIG },
     craftCount: 0,
     hasApiKey: false,
+    audioEnabled: true,
 
     replaceAll: (settings: SettingsPayload) => {
       set({
         aiConfig: settings.aiConfig,
         craftCount: settings.craftCount,
         hasApiKey: settings.hasApiKey,
+        audioEnabled: settings.audioEnabled,
       })
     },
 
@@ -39,6 +43,10 @@ export const useSettingsStore = create<SettingsState>()(
 
     setHasApiKey: (hasApiKey: boolean) => {
       set({ hasApiKey })
+    },
+
+    setAudioEnabled: (audioEnabled: boolean) => {
+      set({ audioEnabled })
     },
 
     incrementCraftCount: () => {

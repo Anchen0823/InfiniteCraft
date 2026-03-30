@@ -121,7 +121,8 @@ function parseAppState(body: unknown): AppStatePayload {
   if (
     !isAiConfig(settingsCandidate.aiConfig) ||
     typeof settingsCandidate.craftCount !== 'number' ||
-    !Number.isFinite(settingsCandidate.craftCount)
+    !Number.isFinite(settingsCandidate.craftCount) ||
+    (settingsCandidate.audioEnabled !== undefined && typeof settingsCandidate.audioEnabled !== 'boolean')
   ) {
     throw new Error('设置数据格式不正确')
   }
@@ -134,6 +135,7 @@ function parseAppState(body: unknown): AppStatePayload {
       aiConfig: settingsCandidate.aiConfig,
       craftCount: Math.max(0, Math.floor(settingsCandidate.craftCount)),
       hasApiKey: false,
+      audioEnabled: settingsCandidate.audioEnabled ?? true,
     },
   }
 }

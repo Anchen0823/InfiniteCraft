@@ -40,6 +40,7 @@ export async function saveWorkspaceState(workspace: WorkspaceStateSnapshot): Pro
 export async function saveSettings(input: {
   aiConfig?: Partial<AIConfig>
   craftCount?: number
+  audioEnabled?: boolean
 }): Promise<SettingsPayload> {
   const response = await fetch('/api/settings', {
     method: 'PUT',

@@ -233,6 +233,7 @@ export class Repository {
   getSettings(): SettingsPayload {
     const aiConfig = readJsonSetting<AIConfig>(this.database, 'aiConfig', env.defaultAiConfig ?? DEFAULT_AI_CONFIG)
     const craftCount = Number.parseInt(readStringSetting(this.database, 'craftCount', '0'), 10)
+    const audioEnabled = readStringSetting(this.database, 'audioEnabled', 'true') !== 'false'
 
     return {
       aiConfig: {
@@ -242,10 +243,11 @@ export class Repository {
       },
       craftCount: Number.isFinite(craftCount) ? craftCount : 0,
       hasApiKey: Boolean(env.openAiApiKey),
+      audioEnabled,
     }
   }
 
-  updateSettings(input: Partial<Pick<SettingsPayload, 'craftCount'>> & { aiConfig?: Partial<AIConfig> }): SettingsPayload {
+  updateSettings(input: Partial<Pick<SettingsPayload, 'craftCount' | 'audioEnabled'>> & { aiConfig?: Partial<AIConfig> }): SettingsPayload {
     const current = this.getSettings()
 
     const nextAiConfig: AIConfig = {
@@ -256,14 +258,19 @@ export class Repository {
     const nextCraftCount = typeof input.craftCount === 'number'
       ? Math.max(0, Math.floor(input.craftCount))
       : current.craftCount
+    const nextAudioEnabled = typeof input.audioEnabled === 'boolean'
+      ? input.audioEnabled
+      : current.audioEnabled
 
     writeSetting(this.database, 'aiConfig', JSON.stringify(nextAiConfig))
     writeSetting(this.database, 'craftCount', String(nextCraftCount))
+    writeSetting(this.database, 'audioEnabled', String(nextAudioEnabled))
 
     return {
       aiConfig: nextAiConfig,
       craftCount: nextCraftCount,
       hasApiKey: current.hasApiKey,
+      audioEnabled: nextAudioEnabled,
     }
   }
 
@@ -341,6 +348,7 @@ export class Repository {
         timeoutMs: input.settings.aiConfig.timeoutMs,
       }))
       writeSetting(this.database, 'craftCount', String(Math.max(0, Math.floor(input.settings.craftCount))))
+      writeSetting(this.database, 'audioEnabled', String(input.settings.audioEnabled !== false))
     })
 
     replace()
@@ -363,6 +371,7 @@ export class Repository {
         aiConfig: currentSettings.aiConfig,
         craftCount: 0,
         hasApiKey: currentSettings.hasApiKey,
+        audioEnabled: currentSettings.audioEnabled,
       },
     })
   }

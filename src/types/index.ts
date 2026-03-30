@@ -46,6 +46,7 @@ export interface SettingsPayload {
   aiConfig: AIConfig
   craftCount: number
   hasApiKey: boolean
+  audioEnabled: boolean
 }
 
 export interface AppStatePayload {

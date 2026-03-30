@@ -2,13 +2,13 @@ import { Router } from 'express'
 import type { AIConfig } from '../../src/types/index.js'
 import { repository } from '../services/repository.js'
 
-function parseSettingsUpdate(body: unknown): { aiConfig?: Partial<AIConfig>; craftCount?: number } {
+function parseSettingsUpdate(body: unknown): { aiConfig?: Partial<AIConfig>; craftCount?: number; audioEnabled?: boolean } {
   if (!body || typeof body !== 'object') {
     throw new Error('设置数据格式不正确')
   }
 
   const candidate = body as Record<string, unknown>
-  const next: { aiConfig?: Partial<AIConfig>; craftCount?: number } = {}
+  const next: { aiConfig?: Partial<AIConfig>; craftCount?: number; audioEnabled?: boolean } = {}
 
   if (candidate.aiConfig !== undefined) {
     if (!candidate.aiConfig || typeof candidate.aiConfig !== 'object') {
@@ -47,6 +47,13 @@ function parseSettingsUpdate(body: unknown): { aiConfig?: Partial<AIConfig>; cra
       throw new Error('合成次数无效')
     }
     next.craftCount = Math.max(0, Math.floor(candidate.craftCount))
+  }
+
+  if (candidate.audioEnabled !== undefined) {
+    if (typeof candidate.audioEnabled !== 'boolean') {
+      throw new Error('音效开关无效')
+    }
+    next.audioEnabled = candidate.audioEnabled
   }
 
   return next

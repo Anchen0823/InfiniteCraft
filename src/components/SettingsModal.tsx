@@ -22,7 +22,9 @@ function applyAppState(payload: AppStatePayload) {
 export default function SettingsModal({ open, onClose, onNotify }: SettingsModalProps) {
   const aiConfig = useSettingsStore(s => s.aiConfig)
   const hasApiKey = useSettingsStore(s => s.hasApiKey)
+  const audioEnabled = useSettingsStore(s => s.audioEnabled)
   const updateConfig = useSettingsStore(s => s.updateConfig)
+  const setAudioEnabled = useSettingsStore(s => s.setAudioEnabled)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [baseUrl, setBaseUrl] = useState(aiConfig.baseUrl)
@@ -173,6 +175,49 @@ export default function SettingsModal({ open, onClose, onNotify }: SettingsModal
               className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none"
             />
           </label>
+
+          <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-800">交互音效</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  控制合成成功与发现新元素时的提示音。
+                </p>
+              </div>
+
+              <button
+                type="button"
+                role="switch"
+                aria-checked={audioEnabled}
+                onClick={() => setAudioEnabled(!audioEnabled)}
+                className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors ${
+                  audioEnabled ? 'bg-blue-600' : 'bg-gray-300'
+                }`}
+              >
+                <span
+                  className={`inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                    audioEnabled ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => window.open('https://github.com/Anchen0823', '_blank', 'noopener,noreferrer')}
+            className="flex w-full items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 p-4 text-left transition-colors hover:bg-gray-100"
+          >
+            <div>
+              <div className="text-sm font-semibold text-gray-800">作者主页</div>
+              <p className="mt-1 text-sm text-gray-500">
+                访问 GitHub 查看项目作者与更多作品
+              </p>
+            </div>
+            <span className="rounded-full border border-gray-200 bg-white px-3 py-1 text-sm text-gray-700">
+              前往
+            </span>
+          </button>
 
           <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
             <h3 className="text-sm font-semibold text-gray-800">数据管理</h3>

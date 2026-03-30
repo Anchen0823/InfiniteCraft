@@ -4,6 +4,7 @@ import { useElementStore } from '../store/elementStore'
 import { useRecipeStore } from '../store/recipeStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { generateId } from '../utils/helpers'
+import { playCraftSuccessSound, playNewDiscoverySound } from '../utils/sound'
 import type {
   CraftAnimationState,
   CraftNotice,
@@ -35,7 +36,7 @@ export function useCraft() {
   const { removeItem, addItem } = useWorkspaceStore()
   const { getElement, addElement, findByName } = useElementStore()
   const { findRecipe, addRecipe } = useRecipeStore()
-  const { incrementCraftCount, setCraftCount, hasApiKey } = useSettingsStore()
+  const { incrementCraftCount, setCraftCount, hasApiKey, audioEnabled } = useSettingsStore()
   const animationTimeoutRef = useRef<number | null>(null)
   const noticeTimeoutRef = useRef<number | null>(null)
 
@@ -153,6 +154,9 @@ export function useCraft() {
               : undefined,
             isNewDiscovery: false,
           }, RESULT_ANIMATION_MS)
+          if (audioEnabled) {
+            playCraftSuccessSound()
+          }
         } else {
           addItem({ ...itemA, instanceId: generateId() })
           addItem({ ...itemB, instanceId: generateId() })
@@ -224,11 +228,18 @@ export function useCraft() {
           }, RESULT_ANIMATION_MS)
 
           if (isNewDiscovery) {
+            if (audioEnabled) {
+              playNewDiscoverySound()
+            }
             setNotice({
               id: generateId(),
               type: 'success',
               message: `发现新元素：${result.resultElement.emoji} ${result.resultElement.name}`,
             })
+          } else {
+            if (audioEnabled) {
+              playCraftSuccessSound()
+            }
           }
         } else {
           addItem({ ...itemA, instanceId: generateId() })
@@ -270,6 +281,7 @@ export function useCraft() {
       incrementCraftCount,
       setCraftCount,
       hasApiKey,
+      audioEnabled,
       findByName,
       setAnimation,
       setNotice,

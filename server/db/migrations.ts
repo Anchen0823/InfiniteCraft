@@ -72,6 +72,7 @@ export function runMigrations() {
 
   ensureSetting('aiConfig', JSON.stringify(env.defaultAiConfig))
   ensureSetting('craftCount', '0')
+  ensureSetting('audioEnabled', 'true')
   ensureSetting('workspaceView', JSON.stringify({
     scale: 1,
     panX: 0,
