@@ -30,13 +30,19 @@
 
 ### 1. 安装依赖
 
+准备 Node.js 22+ 与 pnpm。仓库使用 `pnpm-lock.yaml`，`pnpm dev` 内部也会调用 pnpm。
+
 ```bash
-pnpm install
+git clone https://github.com/Anchen0823/InfiniteCraft.git
+cd InfiniteCraft
+pnpm install --frozen-lockfile
 ```
 
 ### 2. 配置环境变量
 
 复制 `.env.example` 为 `.env`，至少配置：
+
+Windows PowerShell 可执行 `Copy-Item .env.example .env`；Linux / macOS 可执行 `cp .env.example .env`。请只在自己的 `.env` 中填写密钥。
 
 ```bash
 OPENAI_API_KEY=你的模型密钥
@@ -81,6 +87,8 @@ pnpm start
 pnpm preview
 ```
 
+`pnpm start` 会在存在 `dist/` 时同时托管已构建的前端，可访问 `http://localhost:3001`；`pnpm preview` 仅预览前端静态产物，不能替代 API 服务。服务端健康检查为 `http://localhost:3001/api/health`。
+
 ## 数据持久化
 
 - 游戏元素、配方、工作台布局、模型配置、音效开关和合成次数都保存在 SQLite 数据库中。
@@ -117,6 +125,8 @@ server/
 6. 用 Nginx 反向代理到 `http://localhost:3001`。
 7. 把 `.data/` 目录纳入你的备份策略。
 
+当前路由没有登录鉴权，状态与配置由同一实例的访问者共享。公网部署应在反向代理处限制访问，以免他人修改进度或触发模型请求。数据库启动时会执行迁移；已有实例升级前先备份数据库。
+
 如果你使用 PM2，可以直接运行：
 
 ```bash
@@ -138,3 +148,11 @@ pm2 start "pnpm start" --name infinite-craft
 ## 许可证
 
 MIT
+
+## 开发文档
+
+- [开发指南](docs/DEV_GUIDE.md)
+- [产品需求](docs/PRD.md)
+- [环境变量示例](.env.example)
+
+当前 README 描述 React + Express + SQLite 实现；较早的设计文档若提到纯前端存储，应结合当前源码阅读。
